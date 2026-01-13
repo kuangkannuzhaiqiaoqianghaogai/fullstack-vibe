@@ -16,6 +16,20 @@ function TaskList({ tasks, toggleTask, deleteTask }) {
               textAlign: 'left'
             }}
           >
+            {/* 如果有 category 就显示一个小胶囊标签 */}
+            {task.category && (
+            <span style={{ 
+                fontSize: '0.8em', 
+                backgroundColor: '#333', 
+                padding: '2px 6px', 
+                borderRadius: '4px', 
+                marginRight: '8px',
+                color: '#aaa'
+            }}>
+                {task.category}
+            </span>
+            )}
+
             {task.is_done ? '✨' : '⬜️'} {task.content}
           </span>
           <button className="delete-btn" onClick={() => deleteTask(task.id)}>
