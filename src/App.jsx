@@ -1,72 +1,49 @@
+// src/App.jsx
 import React, { useState, useEffect } from 'react'
 import { API_URL } from './config'
-import Header from './components/Header'
-import TaskInput from './components/TaskInput'
-import TaskList from './components/TaskList'
 import Login from './components/Login'
+// 👇 引入 UI 组件
+import { Box, Container, VStack, Heading, Button, useToast, Flex, Text } from '@chakra-ui/react'
+import TaskInput from './components/TaskInput' // 我们马上优化它
+import TaskList from './components/TaskList'   // 我们马上优化它
 
 function App() {
-  // --- 1. 所有的 Hooks 必须放在最前面 ---
   const [token, setToken] = useState(localStorage.getItem('vibe_token'))
   const [tasks, setTasks] = useState([])
   const [newTask, setNewTask] = useState("")
+  const toast = useToast()
 
-  // 定义 fetchTasks (因为 useEffect 要用它，所以要放在 useEffect 前面)
   const fetchTasks = () => {
-    // 如果没有 token，根本不需要去请求后端，直接跳过
     if (!token) return
-
-    fetch(`${API_URL}/tasks/`, {
-      // 👇 关键：发请求时要带上房卡！
-      headers: {
-        'Authorization': `Bearer ${token}` 
-      }
-    })
+    fetch(`${API_URL}/tasks/`, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => {
-        if (res.status === 401) {
-          // 如果后端说房卡无效 (401)，那就强制退出
-          handleLogout()
-          throw new Error("Token过期")
-        }
+        if (res.status === 401) { handleLogout(); throw new Error("失效"); }
         return res.json()
       })
-      .then(data => {
-        if (Array.isArray(data)) setTasks(data)
-      })
+      .then(data => { if (Array.isArray(data)) setTasks(data) })
       .catch(err => console.error(err))
   }
 
-  // ✅ useEffect 必须放在 if return 之前！
-  useEffect(() => {
-    if (token) {
-      fetchTasks()
-    }
-  }, [token]) // 只要 token 变了（比如刚登录），就去拉取数据
+  useEffect(() => { if (token) fetchTasks() }, [token])
 
-  // --- 其他业务逻辑 ---
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!newTask) return
     fetch(`${API_URL}/tasks/`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // 带房卡
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ content: newTask })
     }).then(() => {
       setNewTask("")
       fetchTasks()
+      toast({ title: "任务添加成功", status: "success", duration: 1000 })
     })
   }
 
   const toggleTask = (id, currentStatus) => {
     fetch(`${API_URL}/tasks/${id}`, {
       method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // 带房卡
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ is_done: !currentStatus })
     }).then(() => fetchTasks())
   }
@@ -74,50 +51,60 @@ function App() {
   const deleteTask = (id) => {
     fetch(`${API_URL}/tasks/${id}`, { 
       method: 'DELETE',
-      headers: { 
-        'Authorization': `Bearer ${token}` // 带房卡
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(() => {
+        fetchTasks()
+        toast({ title: "已删除", status: "info", duration: 1000 })
     })
-      .then(() => fetchTasks())
   }
 
-// src/App.jsx
   const handleLogout = () => {
-    localStorage.removeItem('vibe_token') // 1. 丢掉房卡
-    setToken(null)      // 2. 切回登录页
-    setTasks([])        // 3. 🧹【关键！】手动清空旧任务，防止下一位客人看到
-    setNewTask("")      // 4. 顺手把输入框也清空
+    localStorage.removeItem('vibe_token')
+    setToken(null)
+    setTasks([])
+    setNewTask("")
+    toast({ title: "已退出登录", position: "top" })
   }
 
-  // --- 2. 门卫逻辑：只有在所有 Hooks 执行完之后，才能决定要不要“赶人” ---
-  if (!token) {
-    return <Login onLoginSuccess={() => setToken(localStorage.getItem('vibe_token'))} />
-  }
+  if (!token) return <Login onLoginSuccess={() => setToken(localStorage.getItem('vibe_token'))} />
 
-  // --- 3. 正常界面 ---
   return (
-    <div style={{ position: 'relative' }}>
-      <button 
-        onClick={handleLogout}
-        style={{ position: 'absolute', top: 0, right: 0, padding: '5px 10px', fontSize: '12px', cursor: 'pointer' }}
-      >
-        退出登录
-      </button>
+    <Box minH="100vh" bg="gray.50">
+      {/* 顶部导航栏 */}
+      <Box bg="white" px={4} shadow="sm">
+        <Flex h={16} alignItems={'center'} justifyContent={'space-between'} maxW="container.md" mx="auto">
+          <Heading size="md" color="purple.600">✨ Vibe Tasks</Heading>
+          <Button size="sm" colorScheme="gray" onClick={handleLogout}>退出</Button>
+        </Flex>
+      </Box>
 
-      <Header />
-      
-      <TaskInput 
-        newTask={newTask} 
-        setNewTask={setNewTask} 
-        handleSubmit={handleSubmit} 
-      />
+      {/* 主内容区 */}
+      <Container maxW="container.md" mt={8}>
+        <VStack spacing={8} align="stretch">
+          
+          {/* 欢迎语 */}
+          <Box>
+            <Heading size="lg">今天做什么？</Heading>
+            <Text color="gray.500">保持专注，逐个击破。</Text>
+          </Box>
 
-      <TaskList 
-        tasks={tasks} 
-        toggleTask={toggleTask} 
-        deleteTask={deleteTask} 
-      />
-    </div>
+          {/* 输入框组件 */}
+          <TaskInput 
+            newTask={newTask} 
+            setNewTask={setNewTask} 
+            handleSubmit={handleSubmit} 
+          />
+
+          {/* 列表组件 */}
+          <TaskList 
+            tasks={tasks} 
+            toggleTask={toggleTask} 
+            deleteTask={deleteTask} 
+          />
+          
+        </VStack>
+      </Container>
+    </Box>
   )
 }
 

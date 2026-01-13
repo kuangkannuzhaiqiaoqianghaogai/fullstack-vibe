@@ -1,123 +1,159 @@
 // src/components/Login.jsx
 import React, { useState } from 'react'
 import { API_URL } from '../config'
+// 👇 引入漂亮的组件
+import { 
+  Box, Button, Input, VStack, Heading, Text, 
+  useToast, Container, InputGroup, InputLeftElement 
+} from '@chakra-ui/react'
+// 👇 引入图标
+import { FaUser, FaLock } from 'react-icons/fa'
 
 function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
-  
-  // 👇 新增：控制当前是“登录模式”还是“注册模式”
   const [isRegistering, setIsRegistering] = useState(false)
+  const [isLoading, setIsLoading] = useState(false) // 加载状态
+
+  const toast = useToast() // 召唤提示框
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-    setSuccessMsg('')
+    setIsLoading(true) // 按钮开始转圈圈
 
     try {
+      let endpoint = isRegistering ? '/register' : '/token'
+      let options = {}
+
       if (isRegistering) {
-        // --- 🟢 注册逻辑 (发 JSON) ---
-        const res = await fetch(`${API_URL}/register`, {
+        // 注册：发 JSON
+        options = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })
-        })
-        const data = await res.json()
-        
-        if (!res.ok) throw new Error(data.detail || '注册失败')
-        
-        // 注册成功后，自动切回登录模式，并提示用户
-        setSuccessMsg('🎉 注册成功！请登录')
-        setIsRegistering(false) // 切回登录界面
-        setPassword('') // 清空密码让用户重输
-
+        }
       } else {
-        // --- 🔵 登录逻辑 (发表单) ---
+        // 登录：发表单
         const formData = new URLSearchParams()
         formData.append('username', username)
         formData.append('password', password)
-
-        const res = await fetch(`${API_URL}/token`, {
+        options = {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: formData
+        }
+      }
+
+      const res = await fetch(`${API_URL}${endpoint}`, options)
+      const data = await res.json()
+
+      if (!res.ok) throw new Error(data.detail || '操作失败')
+
+      if (isRegistering) {
+        // 注册成功
+        toast({
+          title: "注册成功 🎉",
+          description: "请使用新账号登录",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+          position: "top"
         })
-        const data = await res.json()
-
-        if (!res.ok) throw new Error(data.detail || '账号或密码错啦')
-
+        setIsRegistering(false)
+        setPassword('')
+      } else {
         // 登录成功
         localStorage.setItem('vibe_token', data.access_token)
+        toast({
+          title: "欢迎回来 👋",
+          status: "success",
+          duration: 2000,
+          position: "top"
+        })
         onLoginSuccess()
       }
 
     } catch (err) {
-      setError(err.message)
+      toast({
+        title: "出错了",
+        description: err.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top"
+      })
+    } finally {
+      setIsLoading(false) // 停止转圈
     }
   }
 
   return (
-    <div style={{ maxWidth: '300px', margin: '100px auto', textAlign: 'center', fontFamily: 'sans-serif' }}>
-      <h1 style={{ marginBottom: '20px' }}>
-        {isRegistering ? '📝 新用户注册' : '🔐 请先登录'}
-      </h1>
-
-      {successMsg && <div style={{ color: '#4caf50', marginBottom: '10px', background: '#e8f5e9', padding: '10px', borderRadius: '5px' }}>{successMsg}</div>}
-      {error && <div style={{ color: '#f44336', marginBottom: '10px', background: '#ffebee', padding: '10px', borderRadius: '5px' }}>{error}</div>}
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <input
-          type="text"
-          placeholder="用户名 / Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          style={{ padding: '12px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '16px' }}
-        />
-        <input
-          type="password"
-          placeholder="密码 / Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ padding: '12px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '16px' }}
-        />
-        
-        <button 
-          type="submit" 
-          style={{ 
-            padding: '12px', 
-            borderRadius: '8px', 
-            border: 'none', 
-            background: isRegistering ? '#2196F3' : '#673AB7', // 注册用蓝色，登录用紫色
-            color: 'white', 
-            fontSize: '16px', 
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            transition: 'background 0.3s'
-          }}
+    <Box 
+      h="100vh" 
+      bgGradient="linear(to-r, blue.400, purple.500)" // 漂亮的渐变背景
+      display="flex" 
+      alignItems="center" 
+      justifyContent="center"
+    >
+      <Container maxW="sm">
+        <Box 
+          p={8} 
+          bg="white" 
+          borderRadius="xl" 
+          boxShadow="2xl" // 深邃的阴影
         >
-          {isRegistering ? '注册并提交 (Register)' : '登录 (Login)'}
-        </button>
-      </form>
+          <VStack spacing={6} as="form" onSubmit={handleSubmit}>
+            <Heading size="lg" color="gray.700">
+              {isRegistering ? '加入我们 🚀' : 'Vibe Coding'}
+            </Heading>
+            
+            <InputGroup>
+              <InputLeftElement pointerEvents='none' children={<FaUser color='gray.300' />} />
+              <Input 
+                placeholder="用户名" 
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)}
+                variant="filled"
+              />
+            </InputGroup>
 
-      {/* 👇 切换模式的按钮 */}
-      <p style={{ marginTop: '20px', color: '#666', fontSize: '14px' }}>
-        {isRegistering ? '已有账号？' : '还没有账号？'}
-        <span 
-          onClick={() => {
-            setIsRegistering(!isRegistering)
-            setError('')
-            setSuccessMsg('')
-          }}
-          style={{ color: '#2196F3', cursor: 'pointer', marginLeft: '5px', textDecoration: 'underline' }}
-        >
-          {isRegistering ? '直接登录' : '点击注册'}
-        </span>
-      </p>
-    </div>
+            <InputGroup>
+              <InputLeftElement pointerEvents='none' children={<FaLock color='gray.300' />} />
+              <Input 
+                type="password" 
+                placeholder="密码" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)}
+                variant="filled"
+              />
+            </InputGroup>
+
+            <Button 
+              type="submit" 
+              colorScheme={isRegistering ? "blue" : "purple"} // 注册蓝，登录紫
+              width="full"
+              isLoading={isLoading} // 自动处理加载动画
+              loadingText="提交中..."
+            >
+              {isRegistering ? '立即注册' : '登录'}
+            </Button>
+
+            <Text fontSize="sm" color="gray.500">
+              {isRegistering ? '已有账号？' : '还没有账号？'}
+              <Text 
+                as="span" 
+                color="purple.500" 
+                cursor="pointer" 
+                fontWeight="bold"
+                onClick={() => setIsRegistering(!isRegistering)}
+              >
+                {isRegistering ? ' 去登录' : ' 去注册'}
+              </Text>
+            </Text>
+          </VStack>
+        </Box>
+      </Container>
+    </Box>
   )
 }
 
