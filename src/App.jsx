@@ -81,9 +81,12 @@ function App() {
       .then(() => fetchTasks())
   }
 
+// src/App.jsx
   const handleLogout = () => {
-    localStorage.removeItem('vibe_token')
-    setToken(null)
+    localStorage.removeItem('vibe_token') // 1. 丢掉房卡
+    setToken(null)      // 2. 切回登录页
+    setTasks([])        // 3. 🧹【关键！】手动清空旧任务，防止下一位客人看到
+    setNewTask("")      // 4. 顺手把输入框也清空
   }
 
   // --- 2. 门卫逻辑：只有在所有 Hooks 执行完之后，才能决定要不要“赶人” ---
