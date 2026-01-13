@@ -48,14 +48,14 @@ function App() {
 
   return (
     <div>
-      <h1>🚀 Vibe Board</h1>
+      <h1>🚀 通哥的秘密基地</h1>
       
       <form onSubmit={handleSubmit}>
         <input 
           type="text" 
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Next big thing..."
+          placeholder="今天最重要的三件事"
         />
         <button type="submit">Add Task</button>
       </form>
