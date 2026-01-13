@@ -21,14 +21,28 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 300 # 延长一点过期时间方便测试
 
 app = FastAPI()
 
-# 数据库连接
-if os.getenv("RENDER"):
-    DATABASE_URL = "sqlite:///./sql_app.db"
-    connect_args = {"check_same_thread": False}
+# backend/main.py 修改数据库配置部分
+
+# 1. 尝试从环境变量获取数据库地址 (Render 会自动注入这个 DATABASE_URL)
+env_db_url = os.getenv("DATABASE_URL")
+
+if env_db_url:
+    # --- ☁️ 云端模式 (Render) ---
+    # 修正一个小坑：Render 提供的地址通常是 postgres:// 开头，
+    # 但 SQLAlchemy 需要 postgresql:// 才能识别，这里做一个自动替换
+    if env_db_url.startswith("postgres://"):
+        DATABASE_URL = env_db_url.replace("postgres://", "postgresql://", 1)
+    else:
+        DATABASE_URL = env_db_url
+    connect_args = {}
 else:
-    # 请确保这里的密码是你本地 MySQL 的正确密码
+    # --- 🏠 本地模式 (Localhost) ---
+    # 这里保持你本地 MySQL 的地址不变
     DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/fullstack_vibe"
     connect_args = {}
+
+# 创建引擎
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
