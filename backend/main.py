@@ -8,18 +8,21 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# --- ☁️ 数据库双模配置 ---
-# 逻辑：如果系统里有 DATABASE_URL 环境变量（云端），就用它；
-# 否则默认使用 SQLite 文件数据库（./sql_app.db），方便云端直接运行
-# 如果你在本地想强制用 MySQL，保持本地开发不变即可，
-# 但为了部署方便，我们这里让它默认 fallback 到 SQLite，或者你可以手动保留你的 MySQL 链接
-# 为了你本地继续用 MySQL，我把默认值设回你的 MySQL：
-DEFAULT_DB = "mysql+pymysql://root:123456@localhost:3306/fullstack_vibe"
-DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DB)
+# --- ☁️ 数据库智能切换 (关键修改) ---
+# Render 会自动设置 'RENDER' 这个环境变量
+if os.getenv("RENDER"):
+    # 云端模式：使用 SQLite (无需配置，直接运行)
+    print("☁️ 检测到云端环境，使用 SQLite 数据库")
+    DATABASE_URL = "sqlite:///./sql_app.db"
+    connect_args = {"check_same_thread": False}
+else:
+    # 本地模式：使用你的 MySQL
+    print("🏠 检测到本地环境，使用 MySQL 数据库")
+    # ⚠️ 确保这里的密码是你自己的
+    DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/fullstack_vibe"
+    connect_args = {}
 
-# SQLite 需要特殊的连接参数
-connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
-
+# 创建数据库引擎
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -30,6 +33,7 @@ class Task(Base):
     content = Column(String(200))
     is_done = Column(Boolean, default=False)
 
+# 自动建表
 Base.metadata.create_all(bind=engine)
 
 class TaskCreate(BaseModel):
@@ -47,11 +51,12 @@ def get_db():
 
 app.add_middleware(
     CORSMiddleware,
-    # ⚠️ 允许所有来源，生产环境建议改成具体的域名，但为了 Vibe Coding 方便，先全开
-    allow_origins=["*"], 
+    allow_origins=["*"], # 允许前端访问
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- 接口定义 ---
 
 @app.get("/tasks/")
 def read_tasks(db: Session = Depends(get_db)):
@@ -70,7 +75,6 @@ def update_task(task_id: int, task_update: TaskUpdate, db: Session = Depends(get
     db_task = db.query(Task).filter(Task.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="任务不存在")
-    
     db_task.is_done = task_update.is_done
     db.commit()
     return db_task
@@ -80,7 +84,6 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db_task = db.query(Task).filter(Task.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="任务不存在")
-    
     db.delete(db_task)
     db.commit()
     return {"message": "删除成功"}
