@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useEffect } from 'react'
 import { API_URL } from './config'
 import Login from './components/Login'
 // 👇 引入 UI 组件 (增加了 Input, InputGroup 等用于 AI 输入框)
@@ -10,83 +10,63 @@ import {
 import { SearchIcon } from '@chakra-ui/icons' // 需要安装 @chakra-ui/icons，如果没有可以用文本代替
 import TaskInput from './components/TaskInput'
 import TaskList from './components/TaskList'
-// 👇 引入 API 封装
-import { tasks as taskApi, ai } from './api'
+// 👇 引入 Zustand store
+import useStore from './store'
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('vibe_token'))
-  const [tasks, setTasks] = useState([])
-  const [newTask, setNewTask] = useState("")
-  const [isLoading, setIsLoading] = useState(false) // 新增：加载状态
+  // 使用 Zustand store 获取状态和方法
+  const {
+    token,
+    tasks,
+    newTask,
+    isLoading,
+    aiPrompt,
+    isAiLoading,
+    setToken,
+    clearToken,
+    fetchTasks,
+    setNewTask,
+    setAiPrompt,
+    analyzeTask,
+    toggleTask,
+    deleteTask,
+    createTask
+  } = useStore()
+  
   const toast = useToast()
-
-  // === 🔮 新增：AI 相关状态 ===
-  const [aiPrompt, setAiPrompt] = useState('')
-  const [isAiLoading, setIsAiLoading] = useState(false)
-
-  // === 1. 获取任务列表 ===
-  // 使用 useCallback 缓存函数，避免不必要的重新创建
-  const fetchTasks = useCallback(async () => {
-    if (!token) return
-    setIsLoading(true)
-    try {
-      const data = await taskApi.getTasks()
-      if (Array.isArray(data)) setTasks(data)
-    } catch (err) {
-      console.error(err)
-      toast({ title: "获取任务失败", status: "error", duration: 1500 })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [token, toast])
 
   // 使用 useEffect 触发任务列表获取
   useEffect(() => {
     if (token) {
       fetchTasks()
+        .catch(err => {
+          toast({ title: "获取任务失败", status: "error", duration: 1500 })
+        })
     }
-  }, [token, fetchTasks])
+  }, [token, fetchTasks, toast])
 
   // === 2. 提交新任务 (普通提交) ===
-  // 使用 useCallback 缓存，避免在每次渲染时重新创建
-  const handleSubmit = useCallback(async (e) => {
-    if(e) e.preventDefault() // 兼容直接调用
+  const handleSubmit = async (e) => {
+    e.preventDefault() // 兼容直接调用
     if (!newTask) return
-    setIsLoading(true)
     try {
-      await taskApi.createTask({ content: newTask })
-      setNewTask("")
-      await fetchTasks() // 等待任务列表更新
+      await createTask(newTask)
       toast({ title: "任务添加成功", status: "success", duration: 1000 })
     } catch (err) {
       console.error(err)
       toast({ title: "任务添加失败", status: "error", duration: 1000 })
-    } finally {
-      setIsLoading(false)
     }
-  }, [newTask, taskApi, fetchTasks, toast])
+  }
 
   // === 🔮 新增：AI 智能分析函数 ===
-  // 使用 useCallback 缓存，避免不必要的重新创建
-  const handleAiAnalyze = useCallback(async () => {
+  const handleAiAnalyze = async () => {
     if (!aiPrompt) {
       toast({ title: "请先输入一句话", status: "warning" })
       return
     }
     
-    setIsAiLoading(true)
     try {
-      // 调用 Day 6 写的 AI 接口
-      const data = await ai.analyzeTask({ text: aiPrompt })
-
-      // ✨ 见证奇迹：自动填充 ✨
-      // AI 返回的 data.title 自动填入下方的输入框
-      setNewTask(data.title) 
-      
-      // 如果想要更高级的，可以直接把 data.description 也拼接到 data.title 里
-      // setNewTask(`${data.title} - ${data.description}`)
-
-      setAiPrompt('') // 清空 AI 输入框
+      const data = await analyzeTask()
       toast({ 
         title: "AI 识别成功！", 
         description: `优先级: ${data.priority === 3 ? '紧急 🔥' : '普通'}`,
@@ -97,51 +77,15 @@ function App() {
     } catch (error) {
       console.error(error)
       toast({ title: "AI 分析失败", status: "error", duration: 1500 })
-    } finally {
-      setIsAiLoading(false)
     }
-  }, [aiPrompt, ai, toast])
-
-  // === 3. 更新任务状态 ===
-  // 使用 useCallback 缓存，避免在每次渲染时重新创建
-  const toggleTask = useCallback(async (id, currentStatus) => {
-    setIsLoading(true)
-    try {
-      await taskApi.updateTask(id, { is_done: !currentStatus })
-      await fetchTasks()
-    } catch (err) {
-      console.error(err)
-      toast({ title: "更新任务失败", status: "error", duration: 1500 })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [taskApi, fetchTasks, toast])
-
-  // === 4. 删除任务 ===
-  // 使用 useCallback 缓存，避免在每次渲染时重新创建
-  const deleteTask = useCallback(async (id) => {
-    setIsLoading(true)
-    try {
-      await taskApi.deleteTask(id)
-      await fetchTasks()
-      toast({ title: "已删除", status: "info", duration: 1000 })
-    } catch (err) {
-      console.error(err)
-      toast({ title: "删除失败", status: "error", duration: 1500 })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [taskApi, fetchTasks, toast])
+  }
 
   const handleLogout = () => {
-    localStorage.removeItem('vibe_token')
-    setToken(null)
-    setTasks([])
-    setNewTask("")
+    clearToken()
     toast({ title: "已退出登录", position: "top" })
   }
 
-  if (!token) return <Login onLoginSuccess={() => setToken(localStorage.getItem('vibe_token'))} />
+  if (!token) return <Login />
 
   return (
     <Box minH="100vh" bg="gray.50">

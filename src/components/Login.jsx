@@ -10,14 +10,17 @@ import {
 import { FaUser, FaLock } from 'react-icons/fa'
 // 👇 引入 API 封装
 import { auth } from '../api'
+// 👇 引入 Zustand store
+import useStore from '../store'
 
-function Login({ onLoginSuccess }) {
+function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
   const [isLoading, setIsLoading] = useState(false) // 加载状态
 
   const toast = useToast() // 召唤提示框
+  const { setToken } = useStore() // 使用 Zustand store
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -42,14 +45,13 @@ function Login({ onLoginSuccess }) {
         // 登录：使用 API 封装
         const data = await auth.login({ username, password })
         // 登录成功
-        localStorage.setItem('vibe_token', data.access_token)
+        setToken(data.access_token) // 使用 Zustand store 设置 token
         toast({
           title: "欢迎回来 👋",
           status: "success",
           duration: 2000,
           position: "top"
         })
-        onLoginSuccess()
       }
 
     } catch (err) {
