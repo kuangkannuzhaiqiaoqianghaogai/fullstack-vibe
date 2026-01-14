@@ -13,19 +13,23 @@ const getBadgeColor = (category) => {
   return 'gray' // 默认颜色
 }
 
-const TaskList = React.memo(({ tasks, toggleTask, deleteTask }) => {
+const TaskList = React.memo(({ tasks, filterCategory, toggleTask, deleteTask }) => {
+  // 任务筛选逻辑
+  const filteredTasks = filterCategory === '全部' 
+    ? tasks 
+    : tasks.filter(task => task.category === filterCategory)
   
-  if (tasks.length === 0) {
+  if (filteredTasks.length === 0) {
     return (
       <Box textAlign="center" py={10} color="gray.400">
-        <Text fontSize="lg">📭 还没有任务，添加一个试试？</Text>
+        <Text fontSize="lg">📭 {tasks.length > 0 ? `没有符合"${filterCategory}"分类的任务` : '还没有任务，添加一个试试？'}</Text>
       </Box>
     )
   }
 
   return (
     <VStack spacing={3} align="stretch" w="100%">
-      {tasks.map(task => (
+      {filteredTasks.map(task => (
         <Box 
           key={task.id} 
           p={4} 

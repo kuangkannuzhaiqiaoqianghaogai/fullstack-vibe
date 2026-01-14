@@ -18,10 +18,14 @@ const useStore = create((set, get) => ({
   
   // === 3. 新任务状态 ===
   newTask: '',
+  newTaskCategory: '日常',
   
   // === 4. AI 相关状态 ===
   aiPrompt: '',
   isAiLoading: false,
+  
+  // === 5. 筛选状态 ===
+  filterCategory: '全部',
   
   // === 5. 用户操作方法 ===
   
@@ -113,15 +117,15 @@ const useStore = create((set, get) => ({
   },
   
   // 创建新任务
-  createTask: async (content) => {
-    if (!content) return
+  createTask: async () => {
+    const { newTask, newTaskCategory, fetchTasks } = get()
+    if (!newTask.trim()) return
     
-    const { fetchTasks } = get()
     set({ isLoading: true })
     try {
-      await tasks.createTask({ content })
+      await tasks.createTask({ content: newTask, category: newTaskCategory })
       await fetchTasks()
-      set({ newTask: '' })
+      set({ newTask: '', newTaskCategory: '日常' })
     } catch (err) {
       console.error('创建任务失败:', err)
       throw err
@@ -168,6 +172,12 @@ const useStore = create((set, get) => ({
   
   // 设置新任务内容
   setNewTask: (newTask) => set({ newTask }),
+  
+  // 设置新任务分类
+  setNewTaskCategory: (category) => set({ newTaskCategory: category }),
+  
+  // 设置筛选分类
+  setFilterCategory: (category) => set({ filterCategory: category }),
   
   // === 7. AI 操作方法 ===
   

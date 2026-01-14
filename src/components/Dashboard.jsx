@@ -43,15 +43,15 @@ function Dashboard() {
     { name: '未完成', value: pendingTasks }
   ]
   
-  // 简单的效率曲线数据（模拟最近7天的数据）
+  // 固定的模拟数据，避免使用Math.random()
   const efficiencyData = [
-    { day: '周一', completed: Math.floor(Math.random() * 5) + 1 },
-    { day: '周二', completed: Math.floor(Math.random() * 5) + 1 },
-    { day: '周三', completed: Math.floor(Math.random() * 5) + 1 },
-    { day: '周四', completed: Math.floor(Math.random() * 5) + 1 },
-    { day: '周五', completed: Math.floor(Math.random() * 5) + 1 },
-    { day: '周六', completed: Math.floor(Math.random() * 5) + 1 },
-    { day: '周日', completed: Math.floor(Math.random() * 5) + 1 }
+    { day: '周一', completed: 3 },
+    { day: '周二', completed: 5 },
+    { day: '周三', completed: 2 },
+    { day: '周四', completed: 4 },
+    { day: '周五', completed: 1 },
+    { day: '周六', completed: 5 },
+    { day: '周日', completed: 3 }
   ]
   
   return (

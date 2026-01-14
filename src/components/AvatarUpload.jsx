@@ -9,7 +9,7 @@ import { FaUpload, FaCamera } from 'react-icons/fa'
 import useStore from '../store'
 
 function AvatarUpload() {
-  const { avatar_url, uploadAvatar, username, fetchCurrentUser } = useStore()
+  const { avatar_url, uploadAvatar, username } = useStore()
   const [isUploading, setIsUploading] = useState(false)
   const [preview, setPreview] = useState(avatar_url)
   const fileInputRef = useRef(null)

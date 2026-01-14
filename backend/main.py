@@ -121,6 +121,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 # --- 3. Pydantic 模型 ---
 class TaskCreate(BaseModel):
     content: str
+    category: str = "日常"
 
 class TaskUpdate(BaseModel):
     is_done: bool

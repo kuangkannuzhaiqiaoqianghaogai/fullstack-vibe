@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { API_URL } from './config'
 import Login from './components/Login'
 // 👇 引入 UI 组件 (增加了 Input, InputGroup 等用于 AI 输入框)
@@ -22,13 +22,15 @@ function App() {
     token,
     tasks,
     newTask,
-    isLoading,
+    newTaskCategory,
+    filterCategory,
     aiPrompt,
     isAiLoading,
-    setToken,
     clearToken,
     fetchTasks,
     setNewTask,
+    setNewTaskCategory,
+    setFilterCategory,
     setAiPrompt,
     analyzeTask,
     toggleTask,
@@ -44,10 +46,10 @@ function App() {
     if (token) {
       // 并行获取任务列表和用户信息
       Promise.all([
-        fetchTasks().catch(err => {
+        fetchTasks().catch(() => {
           toast({ title: "获取任务失败", status: "error", duration: 1500 })
         }),
-        fetchCurrentUser().catch(err => {
+        fetchCurrentUser().catch(() => {
           toast({ title: "获取用户信息失败", status: "error", duration: 1500 })
         })
       ])
@@ -57,9 +59,8 @@ function App() {
   // === 2. 提交新任务 (普通提交) ===
   const handleSubmit = async (e) => {
     e.preventDefault() // 兼容直接调用
-    if (!newTask) return
     try {
-      await createTask(newTask)
+      await createTask()
       toast({ title: "任务添加成功", status: "success", duration: 1000 })
     } catch (err) {
       console.error(err)
@@ -172,6 +173,8 @@ function App() {
           <TaskInput 
             newTask={newTask} 
             setNewTask={setNewTask} 
+            newTaskCategory={newTaskCategory}
+            setNewTaskCategory={setNewTaskCategory}
             handleSubmit={handleSubmit} 
           />
 
@@ -184,8 +187,37 @@ function App() {
             <TabPanels>
               {/* 任务列表 */}
               <TabPanel padding={0}>
+                {/* 筛选器 */}
+                <Box mb={4}>
+                  <Text fontSize="sm" fontWeight="bold" color="gray.600" mb={2}>分类筛选</Text>
+                  <HStack spacing={2} overflowX="auto" pb={2}>
+                    {[
+                      { value: '全部', label: '全部' },
+                      { value: '日常', label: '日常' },
+                      { value: '购物', label: '购物' },
+                      { value: '学习', label: '学习' },
+                      { value: '工作', label: '工作' },
+                      { value: '其他', label: '其他' }
+                    ].map((item) => (
+                      <Button
+                        key={item.value}
+                        size="sm"
+                        variant={filterCategory === item.value ? "solid" : "ghost"}
+                        colorScheme={filterCategory === item.value ? "purple" : "gray"}
+                        onClick={() => setFilterCategory(item.value)}
+                        borderRadius="full"
+                        flexShrink={0}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </HStack>
+                </Box>
+                
+                {/* 任务列表 */}
                 <TaskList 
                   tasks={tasks} 
+                  filterCategory={filterCategory}
                   toggleTask={toggleTask} 
                   deleteTask={deleteTask} 
                 />
