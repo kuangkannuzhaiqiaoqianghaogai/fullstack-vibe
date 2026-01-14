@@ -10,6 +10,8 @@ import {
 import { SearchIcon } from '@chakra-ui/icons' // 需要安装 @chakra-ui/icons，如果没有可以用文本代替
 import TaskInput from './components/TaskInput'
 import TaskList from './components/TaskList'
+// 👇 引入 API 封装
+import { tasks as taskApi, ai } from './api'
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('vibe_token'))
@@ -22,32 +24,31 @@ function App() {
   const [isAiLoading, setIsAiLoading] = useState(false)
 
   // === 1. 获取任务列表 ===
-  const fetchTasks = () => {
+  const fetchTasks = async () => {
     if (!token) return
-    fetch(`${API_URL}/tasks/`, { headers: { 'Authorization': `Bearer ${token}` } })
-      .then(res => {
-        if (res.status === 401) { handleLogout(); throw new Error("失效"); }
-        return res.json()
-      })
-      .then(data => { if (Array.isArray(data)) setTasks(data) })
-      .catch(err => console.error(err))
+    try {
+      const data = await taskApi.getTasks()
+      if (Array.isArray(data)) setTasks(data)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   useEffect(() => { if (token) fetchTasks() }, [token])
 
   // === 2. 提交新任务 (普通提交) ===
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if(e) e.preventDefault() // 兼容直接调用
     if (!newTask) return
-    fetch(`${API_URL}/tasks/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ content: newTask }) // 目前后端只接收 content，后续可扩展
-    }).then(() => {
+    try {
+      await taskApi.createTask({ content: newTask })
       setNewTask("")
       fetchTasks()
       toast({ title: "任务添加成功", status: "success", duration: 1000 })
-    })
+    } catch (err) {
+      console.error(err)
+      toast({ title: "任务添加失败", status: "error", duration: 1000 })
+    }
   }
 
   // === 🔮 新增：AI 智能分析函数 ===
@@ -60,59 +61,51 @@ function App() {
     setIsAiLoading(true)
     try {
       // 调用 Day 6 写的 AI 接口
-      const res = await fetch(`${API_URL}/ai/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: aiPrompt })
+      const data = await ai.analyzeTask({ text: aiPrompt })
+
+      // ✨ 见证奇迹：自动填充 ✨
+      // AI 返回的 data.title 自动填入下方的输入框
+      setNewTask(data.title) 
+      
+      // 如果想要更高级的，可以直接把 data.description 也拼接到 data.title 里
+      // setNewTask(`${data.title} - ${data.description}`)
+
+      setAiPrompt('') // 清空 AI 输入框
+      toast({ 
+        title: "AI 识别成功！", 
+        description: `优先级: ${data.priority === 3 ? '紧急 🔥' : '普通'}`,
+        status: "success",
+        position: "top",
+        duration: 2000 
       })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        // ✨ 见证奇迹：自动填充 ✨
-        // AI 返回的 data.title 自动填入下方的输入框
-        setNewTask(data.title) 
-        
-        // 如果想要更高级的，可以直接把 data.description 也拼接到 data.title 里
-        // setNewTask(`${data.title} - ${data.description}`)
-
-        setAiPrompt('') // 清空 AI 输入框
-        toast({ 
-          title: "AI 识别成功！", 
-          description: `优先级: ${data.priority === 3 ? '紧急 🔥' : '普通'}`,
-          status: "success",
-          position: "top",
-          duration: 2000 
-        })
-      } else {
-        toast({ title: "AI 分析失败", status: "error" })
-      }
     } catch (error) {
       console.error(error)
-      toast({ title: "网络请求错误", status: "error" })
+      toast({ title: "AI 分析失败", status: "error" })
     } finally {
       setIsAiLoading(false)
     }
   }
 
   // === 3. 更新任务状态 ===
-  const toggleTask = (id, currentStatus) => {
-    fetch(`${API_URL}/tasks/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ is_done: !currentStatus })
-    }).then(() => fetchTasks())
+  const toggleTask = async (id, currentStatus) => {
+    try {
+      await taskApi.updateTask(id, { is_done: !currentStatus })
+      fetchTasks()
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   // === 4. 删除任务 ===
-  const deleteTask = (id) => {
-    fetch(`${API_URL}/tasks/${id}`, { 
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).then(() => {
-        fetchTasks()
-        toast({ title: "已删除", status: "info", duration: 1000 })
-    })
+  const deleteTask = async (id) => {
+    try {
+      await taskApi.deleteTask(id)
+      fetchTasks()
+      toast({ title: "已删除", status: "info", duration: 1000 })
+    } catch (err) {
+      console.error(err)
+      toast({ title: "删除失败", status: "error", duration: 1000 })
+    }
   }
 
   const handleLogout = () => {

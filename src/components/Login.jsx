@@ -8,6 +8,8 @@ import {
 } from '@chakra-ui/react'
 // 👇 引入图标
 import { FaUser, FaLock } from 'react-icons/fa'
+// 👇 引入 API 封装
+import { auth } from '../api'
 
 function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('')
@@ -22,34 +24,9 @@ function Login({ onLoginSuccess }) {
     setIsLoading(true) // 按钮开始转圈圈
 
     try {
-      let endpoint = isRegistering ? '/register' : '/token'
-      let options = {}
-
       if (isRegistering) {
-        // 注册：发 JSON
-        options = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        }
-      } else {
-        // 登录：发表单
-        const formData = new URLSearchParams()
-        formData.append('username', username)
-        formData.append('password', password)
-        options = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: formData
-        }
-      }
-
-      const res = await fetch(`${API_URL}${endpoint}`, options)
-      const data = await res.json()
-
-      if (!res.ok) throw new Error(data.detail || '操作失败')
-
-      if (isRegistering) {
+        // 注册：使用 API 封装
+        await auth.register({ username, password })
         // 注册成功
         toast({
           title: "注册成功 🎉",
@@ -62,6 +39,8 @@ function Login({ onLoginSuccess }) {
         setIsRegistering(false)
         setPassword('')
       } else {
+        // 登录：使用 API 封装
+        const data = await auth.login({ username, password })
         // 登录成功
         localStorage.setItem('vibe_token', data.access_token)
         toast({
@@ -74,9 +53,10 @@ function Login({ onLoginSuccess }) {
       }
 
     } catch (err) {
+      const errorMsg = err.response?.data?.detail || err.message || '操作失败'
       toast({
         title: "出错了",
-        description: err.message,
+        description: errorMsg,
         status: "error",
         duration: 3000,
         isClosable: true,

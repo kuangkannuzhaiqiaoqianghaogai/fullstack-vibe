@@ -15,14 +15,13 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignK
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from pydantic import BaseModel
-from passlib.context import CryptContext
 from jose import JWTError, jwt
 
 # 导入 AI 函数
 from ai_agent import analyze_task_text
 
 # --- 配置区域 ---
-SECRET_KEY = os.getenv("SECRET_KEY", "vibe_coding_is_awesome_and_secure_key_keep_secret")
+SECRET_KEY = os.getenv("SECRET_KEY", "vibe_coding_secret_key_123")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 300
 
@@ -41,14 +40,8 @@ app.add_middleware(
 )
 
 # --- 数据库配置 ---
-# 优先从 .env 获取，如果没有则使用默认值 (防止报错)
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# 如果 .env 没读到，给一个报错提示或者 fallback
-if not DATABASE_URL:
-    print("⚠️ 警告: 未检测到 DATABASE_URL，尝试使用硬编码配置...")
-    # 请确保这里的密码和你 MySQL 的真实密码一致
-    DATABASE_URL = "mysql+pymysql://root:你的真实密码@localhost:3306/fullstack_vibe"
+# 优先从 .env 获取，如果没有则使用默认值
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vibe_tasks.db")
 
 # Render 部署兼容性处理
 if DATABASE_URL.startswith("postgres://"):
@@ -80,11 +73,14 @@ class Task(Base):
 Base.metadata.create_all(bind=engine)
 
 # --- 2. 安全与工具 ---
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-def verify_password(plain, hashed): return pwd_context.verify(plain, hashed)
-def get_password_hash(password): return pwd_context.hash(password)
+def verify_password(plain, hashed):
+    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
+
+def get_password_hash(password):
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def create_access_token(data: dict):
     to_encode = data.copy()
