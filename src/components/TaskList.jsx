@@ -13,7 +13,7 @@ const getBadgeColor = (category) => {
   return 'gray' // 默认颜色
 }
 
-function TaskList({ tasks, toggleTask, deleteTask }) {
+const TaskList = React.memo(({ tasks, toggleTask, deleteTask }) => {
   
   if (tasks.length === 0) {
     return (
@@ -75,6 +75,6 @@ function TaskList({ tasks, toggleTask, deleteTask }) {
       ))}
     </VStack>
   )
-}
+})
 
 export default TaskList

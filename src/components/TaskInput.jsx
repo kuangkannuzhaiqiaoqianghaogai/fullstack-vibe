@@ -3,7 +3,7 @@ import React from 'react'
 import { HStack, Input, Button } from '@chakra-ui/react'
 import { FaPlus } from 'react-icons/fa' // 引入加号图标
 
-function TaskInput({ newTask, setNewTask, handleSubmit }) {
+const TaskInput = React.memo(({ newTask, setNewTask, handleSubmit }) => {
   return (
     <HStack as="form" onSubmit={handleSubmit} w="100%">
       <Input 
@@ -31,6 +31,6 @@ function TaskInput({ newTask, setNewTask, handleSubmit }) {
       </Button>
     </HStack>
   )
-}
+})
 
 export default TaskInput
