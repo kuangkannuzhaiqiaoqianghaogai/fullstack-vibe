@@ -104,4 +104,20 @@ export const ai = {
   analyzeTask: (data) => api.post('/ai/analyze', data),
 }
 
+// 用户信息
+export const user = {
+  // 获取当前用户信息
+  getCurrentUser: () => api.get('/users/me'),
+  // 上传头像
+  uploadAvatar: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/upload/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
+}
+
 export default api

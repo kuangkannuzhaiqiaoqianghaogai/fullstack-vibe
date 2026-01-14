@@ -12,6 +12,7 @@ import { SearchIcon } from '@chakra-ui/icons' // 需要安装 @chakra-ui/icons�
 import TaskInput from './components/TaskInput'
 import TaskList from './components/TaskList'
 import Dashboard from './components/Dashboard' // 导入仪表盘组件
+import AvatarUpload from './components/AvatarUpload' // 导入头像上传组件
 // 👇 引入 Zustand store
 import useStore from './store'
 
@@ -32,20 +33,26 @@ function App() {
     analyzeTask,
     toggleTask,
     deleteTask,
-    createTask
+    createTask,
+    fetchCurrentUser
   } = useStore()
   
   const toast = useToast()
 
-  // 使用 useEffect 触发任务列表获取
+  // 使用 useEffect 触发任务列表和用户信息获取
   useEffect(() => {
     if (token) {
-      fetchTasks()
-        .catch(err => {
+      // 并行获取任务列表和用户信息
+      Promise.all([
+        fetchTasks().catch(err => {
           toast({ title: "获取任务失败", status: "error", duration: 1500 })
+        }),
+        fetchCurrentUser().catch(err => {
+          toast({ title: "获取用户信息失败", status: "error", duration: 1500 })
         })
+      ])
     }
-  }, [token, fetchTasks, toast])
+  }, [token, fetchTasks, fetchCurrentUser, toast])
 
   // === 2. 提交新任务 (普通提交) ===
   const handleSubmit = async (e) => {
@@ -103,11 +110,16 @@ function App() {
       <Container maxW="container.md" mt={8}>
         <VStack spacing={8} align="stretch">
           
-          {/* 欢迎语 */}
-          <Box>
-            <Heading size="lg">今天做什么？</Heading>
-            <Text color="gray.500">保持专注，逐个击破。</Text>
-          </Box>
+          {/* 欢迎语和头像 */}
+          <VStack spacing={6} align="center">
+            {/* 头像上传 */}
+            <AvatarUpload />
+            {/* 欢迎语 */}
+            <Box textAlign="center">
+              <Heading size="lg">今天做什么？</Heading>
+              <Text color="gray.500">保持专注，逐个击破。</Text>
+            </Box>
+          </VStack>
 
           {/* 🔮 AI 魔法区域 (新增) */}
           <Box 

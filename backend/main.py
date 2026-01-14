@@ -7,8 +7,9 @@ from typing import Union, List
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
@@ -39,6 +40,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- 静态文件服务 ---
+# 创建uploads目录
+os.makedirs("uploads", exist_ok=True)
+# 挂载静态文件服务
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 # --- 数据库配置 ---
 # 优先从 .env 获取，如果没有则使用默认值
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vibe_tasks.db")
@@ -58,6 +65,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True)
     hashed_password = Column(String(100))
+    avatar_url = Column(String(200), default="")
     tasks = relationship("Task", back_populates="owner")
 
 class Task(Base):
@@ -175,6 +183,33 @@ def delete_task(task_id: int, current_user: User = Depends(get_current_user), db
     db.delete(db_task)
     db.commit()
     return {"msg": "删除成功"}
+
+# --- 文件上传：头像上传 --- 
+@app.post("/upload/avatar")
+def upload_avatar(file: UploadFile = File(...), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # 检查文件类型
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="只能上传图片文件")
+    
+    # 生成文件名
+    filename = f"avatar_{current_user.id}{os.path.splitext(file.filename)[1]}"
+    file_path = os.path.join("uploads", filename)
+    
+    # 保存文件
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+    
+    # 更新用户头像URL
+    current_user.avatar_url = f"/uploads/{filename}"
+    db.commit()
+    
+    # 返回更新后的用户信息
+    return {"avatar_url": current_user.avatar_url, "username": current_user.username}
+
+# --- 获取当前用户信息 --- 
+@app.get("/users/me")
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    return {"username": current_user.username, "avatar_url": current_user.avatar_url}
 
 @app.post("/ai/analyze")
 async def analyze_task(request: AIRequest):
