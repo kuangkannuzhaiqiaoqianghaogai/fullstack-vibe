@@ -1,15 +1,17 @@
 // src/App.jsx
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { API_URL } from './config'
 import Login from './components/Login'
 // 👇 引入 UI 组件 (增加了 Input, InputGroup 等用于 AI 输入框)
 import { 
   Box, Container, VStack, Heading, Button, useToast, Flex, Text, 
-  Input, InputGroup, InputRightElement, IconButton 
+  Input, InputGroup, InputRightElement, IconButton, Tabs, TabList, 
+  TabPanels, Tab, TabPanel 
 } from '@chakra-ui/react'
 import { SearchIcon } from '@chakra-ui/icons' // 需要安装 @chakra-ui/icons，如果没有可以用文本代替
 import TaskInput from './components/TaskInput'
 import TaskList from './components/TaskList'
+import Dashboard from './components/Dashboard' // 导入仪表盘组件
 // 👇 引入 Zustand store
 import useStore from './store'
 
@@ -161,12 +163,27 @@ function App() {
             handleSubmit={handleSubmit} 
           />
 
-          {/* 列表组件 */}
-          <TaskList 
-            tasks={tasks} 
-            toggleTask={toggleTask} 
-            deleteTask={deleteTask} 
-          />
+          {/* 标签页：任务列表和仪表盘 */}
+          <Tabs isFitted variant="enclosed">
+            <TabList>
+              <Tab fontWeight="medium">📋 任务列表</Tab>
+              <Tab fontWeight="medium">📊 数据统计</Tab>
+            </TabList>
+            <TabPanels>
+              {/* 任务列表 */}
+              <TabPanel padding={0}>
+                <TaskList 
+                  tasks={tasks} 
+                  toggleTask={toggleTask} 
+                  deleteTask={deleteTask} 
+                />
+              </TabPanel>
+              {/* 仪表盘 */}
+              <TabPanel padding={0}>
+                <Dashboard />
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
           
         </VStack>
       </Container>

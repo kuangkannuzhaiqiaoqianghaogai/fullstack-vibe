@@ -1,7 +1,7 @@
 // src/store.js
 // 使用 Zustand 管理全局状态
 import { create } from 'zustand'
-import { taskApi, ai } from './api'
+import { tasks, ai } from './api'
 
 // 定义 store 的类型和初始状态
 const useStore = create((set, get) => ({
@@ -43,7 +43,7 @@ const useStore = create((set, get) => ({
     
     set({ isLoading: true })
     try {
-      const data = await taskApi.getTasks()
+      const data = await tasks.getTasks()
       if (Array.isArray(data)) {
         set({ tasks: data })
       }
@@ -62,7 +62,7 @@ const useStore = create((set, get) => ({
     const { fetchTasks } = get()
     set({ isLoading: true })
     try {
-      await taskApi.createTask({ content })
+      await tasks.createTask({ content })
       await fetchTasks()
       set({ newTask: '' })
     } catch (err) {
@@ -78,7 +78,7 @@ const useStore = create((set, get) => ({
     const { fetchTasks } = get()
     set({ isLoading: true })
     try {
-      await taskApi.updateTask(id, { is_done })
+      await tasks.updateTask(id, { is_done })
       await fetchTasks()
     } catch (err) {
       console.error('更新任务失败:', err)
@@ -88,12 +88,18 @@ const useStore = create((set, get) => ({
     }
   },
   
+  // 切换任务完成状态（适配TaskList组件）
+  toggleTask: async (id, currentStatus) => {
+    // 调用updateTask，传递包含is_done字段的对象
+    await get().updateTask(id, { is_done: !currentStatus })
+  },
+  
   // 删除任务
   deleteTask: async (id) => {
     const { fetchTasks } = get()
     set({ isLoading: true })
     try {
-      await taskApi.deleteTask(id)
+      await tasks.deleteTask(id)
       await fetchTasks()
     } catch (err) {
       console.error('删除任务失败:', err)
