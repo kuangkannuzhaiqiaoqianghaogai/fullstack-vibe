@@ -4,7 +4,7 @@ import { API_URL } from './config'
 import Login from './components/Login'
 // 👇 引入 UI 组件 (增加了 Input, InputGroup 等用于 AI 输入框)
 import { 
-  Box, Container, VStack, Heading, Button, useToast, Flex, Text, 
+  Box, Container, VStack, HStack, Heading, Button, useToast, Flex, Text, 
   Input, InputGroup, InputRightElement, IconButton, Tabs, TabList, 
   TabPanels, Tab, TabPanel 
 } from '@chakra-ui/react'
