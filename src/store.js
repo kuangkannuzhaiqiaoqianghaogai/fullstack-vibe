@@ -278,6 +278,51 @@ const useStore = create((set, get) => ({
     } finally {
       set({ isAiLoading: false })
     }
+  },
+  
+  // 导出任务
+  exportTasks: async () => {
+    const { isLoading } = get()
+    set({ isLoading: true })
+    try {
+      const data = await tasks.exportTasks()
+      // 将导出数据转换为JSON字符串
+      const jsonData = JSON.stringify(data, null, 2)
+      // 创建Blob对象
+      const blob = new Blob([jsonData], { type: 'application/json' })
+      // 创建下载链接
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `vibe-tasks-export-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      // 清理
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      return data
+    } catch (err) {
+      console.error('导出任务失败:', err)
+      throw err
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+  
+  // 导入任务
+  importTasks: async (tasksData) => {
+    const { isLoading, fetchTasks } = get()
+    set({ isLoading: true })
+    try {
+      const result = await tasks.importTasks(tasksData)
+      await fetchTasks()
+      return result
+    } catch (err) {
+      console.error('导入任务失败:', err)
+      throw err
+    } finally {
+      set({ isLoading: false })
+    }
   }
 }))
 

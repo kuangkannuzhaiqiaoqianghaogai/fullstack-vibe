@@ -98,6 +98,10 @@ export const tasks = {
   updateTasksSort: (tasks) => api.put('/tasks/sort', tasks),
   // 删除任务
   deleteTask: (id) => api.delete(`/tasks/${id}`),
+  // 导出任务
+  exportTasks: () => api.get('/tasks/export'),
+  // 导入任务
+  importTasks: (tasks) => api.post('/tasks/import', tasks),
 }
 
 // AI 服务

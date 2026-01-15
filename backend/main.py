@@ -135,6 +135,14 @@ class TaskUpdate(BaseModel):
     priority: int = None
     deadline: Optional[datetime] = None
     sort_order: int = None
+
+class TaskImport(BaseModel):
+    content: str
+    category: str = "日常"
+    priority: int = 1
+    deadline: Optional[datetime] = None
+    is_done: bool = False
+    sort_order: int = 0
     
 class UserCreate(BaseModel):
     username: str
@@ -243,6 +251,46 @@ def delete_task(task_id: int, current_user: User = Depends(get_current_user), db
     db.delete(db_task)
     db.commit()
     return {"msg": "删除成功"}
+
+# --- 任务导出/导入 --- 
+
+# 导出任务
+@app.get("/tasks/export")
+def export_tasks(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    tasks = db.query(Task).filter(Task.owner_id == current_user.id).order_by(Task.sort_order).all()
+    # 转换为可序列化的格式
+    export_data = []
+    for task in tasks:
+        export_data.append({
+            "content": task.content,
+            "category": task.category,
+            "priority": task.priority,
+            "deadline": task.deadline,
+            "is_done": task.is_done,
+            "sort_order": task.sort_order
+        })
+    return {"tasks": export_data, "export_time": datetime.utcnow()}
+
+# 导入任务
+@app.post("/tasks/import")
+def import_tasks(tasks: list[TaskImport], current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        # 批量创建任务
+        for task_data in tasks:
+            db_task = Task(
+                content=task_data.content,
+                category=task_data.category,
+                priority=task_data.priority,
+                deadline=task_data.deadline,
+                is_done=task_data.is_done,
+                sort_order=task_data.sort_order,
+                owner_id=current_user.id
+            )
+            db.add(db_task)
+        db.commit()
+        return {"status": "success", "message": f"成功导入 {len(tasks)} 个任务"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"导入任务失败: {str(e)}")
 
 # --- 文件上传：头像上传 --- 
 @app.post("/upload/avatar")

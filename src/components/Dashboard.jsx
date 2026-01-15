@@ -1,16 +1,17 @@
 // src/components/Dashboard.jsx
 // 数据可视化仪表盘
 import React from 'react'
-import { 
-  Box, VStack, HStack, Text, Heading, Card, CardBody, 
+import {
+  Box, VStack, HStack, Text, Heading, Card, CardBody,
   CardHeader, Stat, StatLabel, StatNumber, StatHelpText,
-  Grid, GridItem 
+  Grid, GridItem
 } from '@chakra-ui/react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
 import useStore from '../store'
+import TaskExportImport from './TaskExportImport'
 
 // 定义颜色常量
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE']
@@ -197,6 +198,9 @@ function Dashboard() {
           </Box>
         </CardBody>
       </Card>
+      
+      {/* 任务导出/导入 */}
+      <TaskExportImport />
       
       {/* AI 分析建议 */}
       <Card shadow="sm" bg="purple.50" border="1px solid" borderColor="purple.100">

@@ -15,6 +15,7 @@ import Dashboard from './components/Dashboard' // 导入仪表盘组件
 import AvatarUpload from './components/AvatarUpload' // 导入头像上传组件
 import ThemeToggle from './components/ThemeToggle' // 导入主题切换组件
 import SearchBar from './components/SearchBar' // 导入搜索组件
+import TaskExportImport from './components/TaskExportImport' // 导入任务导出/导入组件
 // 👇 引入 Zustand store
 import useStore from './store'
 
