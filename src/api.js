@@ -94,6 +94,8 @@ export const tasks = {
   createTask: (data) => api.post('/tasks/', data),
   // 更新任务
   updateTask: (id, data) => api.put(`/tasks/${id}`, data),
+  // 批量更新任务排序
+  updateTasksSort: (tasks) => api.put('/tasks/sort', tasks),
   // 删除任务
   deleteTask: (id) => api.delete(`/tasks/${id}`),
 }

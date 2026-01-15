@@ -76,6 +76,7 @@ class Task(Base):
     category = Column(String(50), default="日常")
     priority = Column(Integer, default=1)  # 1: 低, 2: 中, 3: 高
     deadline = Column(DateTime, nullable=True)
+    sort_order = Column(Integer, default=0)  # 用于拖拽排序
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="tasks")
 
@@ -126,12 +127,14 @@ class TaskCreate(BaseModel):
     category: str = "日常"
     priority: int = 1  # 1: 低, 2: 中, 3: 高
     deadline: Optional[datetime] = None
+    sort_order: int = 0
 
 class TaskUpdate(BaseModel):
     is_done: bool = None
     content: str = None
     priority: int = None
     deadline: Optional[datetime] = None
+    sort_order: int = None
     
 class UserCreate(BaseModel):
     username: str
@@ -162,7 +165,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 @app.get("/tasks/")
 def read_tasks(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return db.query(Task).filter(Task.owner_id == current_user.id).all()
+    # 按sort_order排序返回任务
+    return db.query(Task).filter(Task.owner_id == current_user.id).order_by(Task.sort_order).all()
 
 @app.post("/tasks/")
 def create_task(task: TaskCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -184,6 +188,7 @@ def create_task(task: TaskCreate, current_user: User = Depends(get_current_user)
         category=category, 
         priority=priority,
         deadline=task.deadline,
+        sort_order=task.sort_order,
         owner_id=current_user.id
     )
     db.add(db_task)
@@ -209,9 +214,27 @@ def update_task(task_id: int, task_update: TaskUpdate, current_user: User = Depe
         db_task.priority = priority
     if task_update.deadline is not None:
         db_task.deadline = task_update.deadline
+    if task_update.sort_order is not None:
+        db_task.sort_order = task_update.sort_order
     
     db.commit()
     return db_task
+
+# 批量更新任务排序的端点
+@app.put("/tasks/sort")
+def update_tasks_sort(tasks: list[dict], current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        for task_data in tasks:
+            task_id = task_data.get("id")
+            sort_order = task_data.get("sort_order")
+            if task_id and sort_order is not None:
+                db_task = db.query(Task).filter(Task.id == task_id, Task.owner_id == current_user.id).first()
+                if db_task:
+                    db_task.sort_order = sort_order
+        db.commit()
+        return {"status": "success", "message": "任务排序已更新"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"更新任务排序失败: {str(e)}")
 
 @app.delete("/tasks/{task_id}")
 def delete_task(task_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

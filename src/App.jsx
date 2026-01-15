@@ -44,6 +44,7 @@ function App() {
     toggleTask,
     deleteTask,
     editTask,
+    updateTasksSort,
     createTask,
     fetchCurrentUser
   } = useStore()
@@ -280,9 +281,11 @@ function App() {
                   tasks={tasks} 
                   filterCategory={filterCategory}
                   filterPriority={filterPriority}
+                  filterDeadline={filterDeadline}
                   toggleTask={toggleTask} 
                   deleteTask={deleteTask} 
                   editTask={editTask}
+                  updateTasksSort={updateTasksSort}
                 />
               </TabPanel>
               {/* 仪表盘 */}

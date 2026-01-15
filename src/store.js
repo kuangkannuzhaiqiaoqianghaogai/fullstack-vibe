@@ -138,7 +138,10 @@ const useStore = create((set, get) => ({
         newTask: '', 
         newTaskCategory: '日常',
         newTaskPriority: 1,
-        newTaskDeadline: null
+        newTaskDeadline: null,
+        filterDeadline: '全部', // 重置筛选条件为全部，确保新任务显示
+        filterCategory: '全部', // 重置分类筛选
+        filterPriority: '全部'  // 重置优先级筛选
       })
     } catch (err) {
       console.error('创建任务失败:', err)
@@ -184,12 +187,27 @@ const useStore = create((set, get) => ({
     }
   },
   
-  // 编辑任务
-  editTask: async (id, content) => {
+  // 批量更新任务排序
+  updateTasksSort: async (tasksData) => {
     const { fetchTasks } = get()
     set({ isLoading: true })
     try {
-      await tasks.updateTask(id, { content })
+      await tasks.updateTasksSort(tasksData)
+      await fetchTasks()
+    } catch (err) {
+      console.error('更新任务排序失败:', err)
+      throw err
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+  
+  // 编辑任务
+  editTask: async (id, data) => {
+    const { fetchTasks } = get()
+    set({ isLoading: true })
+    try {
+      await tasks.updateTask(id, data)
       await fetchTasks()
     } catch (err) {
       console.error('编辑任务失败:', err)
