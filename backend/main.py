@@ -124,7 +124,8 @@ class TaskCreate(BaseModel):
     category: str = "日常"
 
 class TaskUpdate(BaseModel):
-    is_done: bool
+    is_done: bool = None
+    content: str = None
     
 class UserCreate(BaseModel):
     username: str
@@ -173,7 +174,13 @@ def create_task(task: TaskCreate, current_user: User = Depends(get_current_user)
 def update_task(task_id: int, task_update: TaskUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     db_task = db.query(Task).filter(Task.id == task_id, Task.owner_id == current_user.id).first()
     if not db_task: raise HTTPException(status_code=404, detail="任务找不到或无权修改")
-    db_task.is_done = task_update.is_done
+    
+    # 只更新提供的字段
+    if task_update.is_done is not None:
+        db_task.is_done = task_update.is_done
+    if task_update.content is not None:
+        db_task.content = task_update.content
+    
     db.commit()
     return db_task
 

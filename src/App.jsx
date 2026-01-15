@@ -35,6 +35,7 @@ function App() {
     analyzeTask,
     toggleTask,
     deleteTask,
+    editTask,
     createTask,
     fetchCurrentUser
   } = useStore()
@@ -220,6 +221,7 @@ function App() {
                   filterCategory={filterCategory}
                   toggleTask={toggleTask} 
                   deleteTask={deleteTask} 
+                  editTask={editTask}
                 />
               </TabPanel>
               {/* 仪表盘 */}

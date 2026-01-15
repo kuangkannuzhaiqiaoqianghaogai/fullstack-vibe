@@ -170,6 +170,21 @@ const useStore = create((set, get) => ({
     }
   },
   
+  // 编辑任务
+  editTask: async (id, content) => {
+    const { fetchTasks } = get()
+    set({ isLoading: true })
+    try {
+      await tasks.updateTask(id, { content })
+      await fetchTasks()
+    } catch (err) {
+      console.error('编辑任务失败:', err)
+      throw err
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+  
   // 设置新任务内容
   setNewTask: (newTask) => set({ newTask }),
   

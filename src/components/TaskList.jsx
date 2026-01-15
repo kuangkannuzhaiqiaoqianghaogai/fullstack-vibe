@@ -1,9 +1,10 @@
 // src/components/TaskList.jsx
-import React from 'react'
+import React, { useState } from 'react'
 import { 
-  VStack, HStack, Text, IconButton, Badge, Spacer, Box, Checkbox 
+  VStack, HStack, Text, IconButton, Badge, Spacer, Box, Checkbox, 
+  Input, Button, Flex
 } from '@chakra-ui/react'
-import { FaTrash } from 'react-icons/fa'
+import { FaTrash, FaEdit, FaSave, FaTimes } from 'react-icons/fa'
 
 // 🎨 定义一个调色盘，给不同的分类分配颜色
 const getBadgeColor = (category) => {
@@ -13,7 +14,31 @@ const getBadgeColor = (category) => {
   return 'gray' // 默认颜色
 }
 
-const TaskList = React.memo(({ tasks, filterCategory, toggleTask, deleteTask }) => {
+const TaskList = React.memo(({ tasks, filterCategory, toggleTask, deleteTask, editTask }) => {
+  // 编辑状态：当前正在编辑的任务ID和编辑内容
+  const [editingTaskId, setEditingTaskId] = useState(null)
+  const [editingContent, setEditingContent] = useState('')
+  
+  // 开始编辑任务
+  const handleEditStart = (task) => {
+    setEditingTaskId(task.id)
+    setEditingContent(task.content)
+  }
+  
+  // 取消编辑
+  const handleEditCancel = () => {
+    setEditingTaskId(null)
+    setEditingContent('')
+  }
+  
+  // 保存编辑
+  const handleEditSave = (taskId) => {
+    if (editingContent.trim()) {
+      editTask(taskId, editingContent.trim())
+      setEditingTaskId(null)
+      setEditingContent('')
+    }
+  }
   // 任务筛选逻辑
   const filteredTasks = filterCategory === '全部' 
     ? tasks 
@@ -50,30 +75,78 @@ const TaskList = React.memo(({ tasks, filterCategory, toggleTask, deleteTask }) 
               size="lg"
             />
 
-            {/* 2. 任务内容 */}
-            <Text 
-              flex={1} // 占据剩余空间
-              as={task.is_done ? 's' : 'span'} // 如果完成了，加删除线(s标签)
-              color={task.is_done ? 'gray.400' : 'gray.800'}
-              fontWeight={task.is_done ? 'normal' : 'medium'}
-            >
-              {task.content}
-            </Text>
+            {/* 2. 任务内容或编辑表单 */}
+            {editingTaskId === task.id ? (
+              <Flex flex={1} gap={2} alignItems="center">
+                <Input
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                  variant="filled"
+                  size="sm"
+                  bg="gray.50"
+                  focusBorderColor="purple.500"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleEditSave(task.id)
+                    if (e.key === 'Escape') handleEditCancel()
+                  }}
+                />
+                <Button
+                  size="xs"
+                  colorScheme="green"
+                  leftIcon={<FaSave />}
+                  onClick={() => handleEditSave(task.id)}
+                  isDisabled={!editingContent.trim()}
+                >
+                  保存
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  leftIcon={<FaTimes />}
+                  onClick={handleEditCancel}
+                >
+                  取消
+                </Button>
+              </Flex>
+            ) : (
+              <Text 
+                flex={1} // 占据剩余空间
+                as={task.is_done ? 's' : 'span'} // 如果完成了，加删除线(s标签)
+                color={task.is_done ? 'gray.400' : 'gray.800'}
+                fontWeight={task.is_done ? 'normal' : 'medium'}
+              >
+                {task.content}
+              </Text>
+            )}
 
             {/* 3. 分类标签 */}
             <Badge colorScheme={getBadgeColor(task.category)} variant="subtle" borderRadius="full" px={2}>
               {task.category}
             </Badge>
 
-            {/* 4. 删除按钮 (红色垃圾桶) */}
-            <IconButton 
-              icon={<FaTrash />}
-              colorScheme="red"
-              variant="ghost" // 幽灵模式（透明背景）
-              size="sm"
-              onClick={() => deleteTask(task.id)}
-              aria-label="删除任务"
-            />
+            {/* 4. 操作按钮 */}
+            <HStack spacing={1}>
+              {/* 编辑按钮 */}
+              <IconButton 
+                icon={<FaEdit />}
+                colorScheme="blue"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEditStart(task)}
+                aria-label="编辑任务"
+              />
+              
+              {/* 删除按钮 (红色垃圾桶) */}
+              <IconButton 
+                icon={<FaTrash />}
+                colorScheme="red"
+                variant="ghost"
+                size="sm"
+                onClick={() => deleteTask(task.id)}
+                aria-label="删除任务"
+              />
+            </HStack>
           </HStack>
         </Box>
       ))}
