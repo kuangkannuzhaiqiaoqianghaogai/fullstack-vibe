@@ -14,6 +14,9 @@ const useStore = create((set, get) => ({
   // === 6. 主题状态 ===
   isDarkMode: localStorage.getItem('isDarkMode') === 'true',
   
+  // === 7. 搜索状态 ===
+  searchQuery: '',
+  
   // === 2. 任务状态 ===
   tasks: [],
   isLoading: false,
@@ -239,6 +242,9 @@ const useStore = create((set, get) => ({
   
   // 设置筛选截止日期
   setFilterDeadline: (deadline) => set({ filterDeadline: deadline }),
+  
+  // 设置搜索查询
+  setSearchQuery: (query) => set({ searchQuery: query }),
   
   // === 8. 主题操作方法 ===
   

@@ -92,7 +92,7 @@ const SortableItem = React.memo(({ id, children }) => {
   )
 })
 
-const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDeadline, toggleTask, deleteTask, editTask, updateTasksSort }) => {
+const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDeadline, searchQuery, toggleTask, deleteTask, editTask, updateTasksSort }) => {
   // 编辑状态：当前正在编辑的任务
   const [editingTask, setEditingTask] = useState(null)
   const [editingContent, setEditingContent] = useState('')
@@ -169,7 +169,7 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDead
     }
   }
   
-  // 任务筛选逻辑：支持按分类、优先级和截止日期筛选
+  // 任务筛选逻辑：支持按分类、优先级、截止日期和搜索内容筛选
   const filteredTasks = tasks.filter(task => {
     // 分类筛选 - 修复：确保分类匹配逻辑正确
     let matchesCategory = true
@@ -217,7 +217,12 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDead
       matchesDeadline = false
     }
     
-    return matchesCategory && matchesPriority && matchesDeadline
+    // 搜索内容筛选
+    const matchesSearch = !searchQuery || 
+                         (task.content && task.content.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                         (task.category && task.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    
+    return matchesCategory && matchesPriority && matchesDeadline && matchesSearch
   })
   
   // 生成任务ID数组，用于拖拽排序

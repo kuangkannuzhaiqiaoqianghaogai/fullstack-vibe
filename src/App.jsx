@@ -14,6 +14,7 @@ import TaskList from './components/TaskList'
 import Dashboard from './components/Dashboard' // 导入仪表盘组件
 import AvatarUpload from './components/AvatarUpload' // 导入头像上传组件
 import ThemeToggle from './components/ThemeToggle' // 导入主题切换组件
+import SearchBar from './components/SearchBar' // 导入搜索组件
 // 👇 引入 Zustand store
 import useStore from './store'
 
@@ -29,6 +30,7 @@ function App() {
     filterCategory,
     filterPriority,
     filterDeadline,
+    searchQuery,
     aiPrompt,
     isAiLoading,
     clearToken,
@@ -40,6 +42,7 @@ function App() {
     setFilterCategory,
     setFilterPriority,
     setFilterDeadline,
+    setSearchQuery,
     setAiPrompt,
     analyzeTask,
     toggleTask,
@@ -283,12 +286,16 @@ function App() {
                   </HStack>
                 </Box>
                 
+                {/* 搜索栏 */}
+                <SearchBar />
+                
                 {/* 任务列表 */}
                 <TaskList 
                   tasks={tasks} 
                   filterCategory={filterCategory}
                   filterPriority={filterPriority}
                   filterDeadline={filterDeadline}
+                  searchQuery={searchQuery}
                   toggleTask={toggleTask} 
                   deleteTask={deleteTask} 
                   editTask={editTask}
