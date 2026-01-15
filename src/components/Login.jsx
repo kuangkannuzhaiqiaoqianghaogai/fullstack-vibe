@@ -2,9 +2,10 @@
 import React, { useState } from 'react'
 import { API_URL } from '../config'
 // 👇 引入漂亮的组件
-import { 
-  Box, Button, Input, VStack, Heading, Text, 
-  useToast, Container, InputGroup, InputLeftElement 
+import {
+  Box, Button, Input, VStack, Heading, Text,
+  useToast, Container, InputGroup, InputLeftElement,
+  ColorModeProvider, CSSReset, useColorMode
 } from '@chakra-ui/react'
 // 👇 引入图标
 import { FaUser, FaLock } from 'react-icons/fa'
@@ -20,7 +21,13 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false) // 加载状态
 
   const toast = useToast() // 召唤提示框
-  const { setToken } = useStore() // 使用 Zustand store
+  const { setToken, isDarkMode } = useStore() // 使用 Zustand store
+  const { colorMode, setColorMode } = useColorMode()
+
+  // 初始化主题
+  React.useEffect(() => {
+    setColorMode(isDarkMode ? 'dark' : 'light')
+  }, [isDarkMode, setColorMode])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -70,72 +77,83 @@ function Login() {
   }
 
   return (
-    <Box 
-      h="100vh" 
-      bgGradient="linear(to-r, blue.400, purple.500)" // 漂亮的渐变背景
-      display="flex" 
-      alignItems="center" 
-      justifyContent="center"
-    >
-      <Container maxW="sm">
-        <Box 
-          p={8} 
-          bg="white" 
-          borderRadius="xl" 
-          boxShadow="2xl" // 深邃的阴影
-        >
-          <VStack spacing={6} as="form" onSubmit={handleSubmit}>
-            <Heading size="lg" color="gray.700">
-              {isRegistering ? '加入我们 🚀' : 'Vibe Coding'}
-            </Heading>
-            
-            <InputGroup>
-              <InputLeftElement pointerEvents='none' children={<FaUser color='gray.300' />} />
-              <Input 
-                placeholder="用户名" 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)}
-                variant="filled"
-              />
-            </InputGroup>
+    <ColorModeProvider>
+      <CSSReset />
+      <Box
+        h="100vh"
+        bg={colorMode === 'dark' ? 'gray.900' : 'linear(to-r, blue.400, purple.500)'}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        p={4}
+      >
+        <Container maxW="sm">
+          <Box
+            p={8}
+            bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+            borderRadius="xl"
+            boxShadow="2xl"
+            border={colorMode === 'dark' ? '1px solid gray.700' : 'none'}
+          >
+            <VStack spacing={6} as="form" onSubmit={handleSubmit}>
+              <Heading size="lg" color={colorMode === 'dark' ? 'white' : 'gray.700'}>
+                {isRegistering ? '加入我们 🚀' : 'Vibe Coding'}
+              </Heading>
+              
+              <InputGroup>
+                <InputLeftElement pointerEvents='none' children={<FaUser color={colorMode === 'dark' ? 'gray.400' : 'gray.300'} />} />
+                <Input
+                  placeholder="用户名"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  variant="filled"
+                  bg={colorMode === 'dark' ? 'gray.700' : 'gray.50'}
+                  color={colorMode === 'dark' ? 'white' : 'gray.800'}
+                  _placeholder={{ color: colorMode === 'dark' ? 'gray.400' : 'gray.500' }}
+                />
+              </InputGroup>
 
-            <InputGroup>
-              <InputLeftElement pointerEvents='none' children={<FaLock color='gray.300' />} />
-              <Input 
-                type="password" 
-                placeholder="密码" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)}
-                variant="filled"
-              />
-            </InputGroup>
+              <InputGroup>
+                <InputLeftElement pointerEvents='none' children={<FaLock color={colorMode === 'dark' ? 'gray.400' : 'gray.300'} />} />
+                <Input
+                  type="password"
+                  placeholder="密码"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  variant="filled"
+                  bg={colorMode === 'dark' ? 'gray.700' : 'gray.50'}
+                  color={colorMode === 'dark' ? 'white' : 'gray.800'}
+                  _placeholder={{ color: colorMode === 'dark' ? 'gray.400' : 'gray.500' }}
+                />
+              </InputGroup>
 
-            <Button 
-              type="submit" 
-              colorScheme={isRegistering ? "blue" : "purple"} // 注册蓝，登录紫
-              width="full"
-              isLoading={isLoading} // 自动处理加载动画
-              loadingText="提交中..."
-            >
-              {isRegistering ? '立即注册' : '登录'}
-            </Button>
-
-            <Text fontSize="sm" color="gray.500">
-              {isRegistering ? '已有账号？' : '还没有账号？'}
-              <Text 
-                as="span" 
-                color="purple.500" 
-                cursor="pointer" 
-                fontWeight="bold"
-                onClick={() => setIsRegistering(!isRegistering)}
+              <Button
+                type="submit"
+                colorScheme={isRegistering ? "blue" : "purple"}
+                width="full"
+                isLoading={isLoading}
+                loadingText="提交中..."
               >
-                {isRegistering ? ' 去登录' : ' 去注册'}
+                {isRegistering ? '立即注册' : '登录'}
+              </Button>
+
+              <Text fontSize="sm" color={colorMode === 'dark' ? 'gray.300' : 'gray.500'}>
+                {isRegistering ? '已有账号？' : '还没有账号？'}
+                <Text
+                  as="span"
+                  color="purple.500"
+                  cursor="pointer"
+                  fontWeight="bold"
+                  onClick={() => setIsRegistering(!isRegistering)}
+                >
+                  {isRegistering ? ' 去登录' : ' 去注册'}
+                </Text>
               </Text>
-            </Text>
-          </VStack>
-        </Box>
-      </Container>
-    </Box>
+            </VStack>
+          </Box>
+        </Container>
+      </Box>
+    </ColorModeProvider>
   )
 }
 

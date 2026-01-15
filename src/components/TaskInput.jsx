@@ -1,6 +1,6 @@
 // src/components/TaskInput.jsx
 import React from 'react'
-import { HStack, Input, Button, Select, Box } from '@chakra-ui/react'
+import { HStack, Input, Button, Select, Box, useColorMode } from '@chakra-ui/react'
 import { FaPlus } from 'react-icons/fa' // 引入加号图标
 
 const TaskInput = React.memo(({ 
@@ -14,6 +14,8 @@ const TaskInput = React.memo(({
   newTaskDeadline,
   setNewTaskDeadline
 }) => {
+  const { colorMode } = useColorMode()
+  
   return (
     <Box as="form" onSubmit={handleSubmit} w="100%">
       {/* 分类和优先级选择 */}
@@ -22,7 +24,8 @@ const TaskInput = React.memo(({
           <Select
             value={newTaskCategory}
             onChange={(e) => setNewTaskCategory(e.target.value)}
-            bg="white"
+            bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+            color={colorMode === 'dark' ? 'white' : 'gray.800'}
             borderRadius="md"
             focusBorderColor="purple.500"
             boxShadow="sm"
@@ -40,7 +43,8 @@ const TaskInput = React.memo(({
           <Select
             value={newTaskPriority}
             onChange={(e) => setNewTaskPriority(parseInt(e.target.value))}
-            bg="white"
+            bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+            color={colorMode === 'dark' ? 'white' : 'gray.800'}
             borderRadius="md"
             focusBorderColor="purple.500"
             boxShadow="sm"
@@ -63,7 +67,8 @@ const TaskInput = React.memo(({
               const date = e.target.value ? new Date(e.target.value) : null
               setNewTaskDeadline(date)
             }}
-            bg="white"
+            bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+            color={colorMode === 'dark' ? 'white' : 'gray.800'}
             borderRadius="md"
             focusBorderColor="purple.500"
             boxShadow="sm"
@@ -92,7 +97,8 @@ const TaskInput = React.memo(({
           value={newTask} 
           onChange={(e) => setNewTask(e.target.value)}
           variant="filled" // 填充风格，带点灰色背景
-          bg="white"
+          bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+          color={colorMode === 'dark' ? 'white' : 'gray.800'}
           size="lg"        // 大一点，看着舒服
           borderRadius="full" // 圆角设计
           focusBorderColor="purple.500" // 聚焦时变紫

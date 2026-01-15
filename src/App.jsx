@@ -3,16 +3,17 @@ import React, { useEffect } from 'react'
 import { API_URL } from './config'
 import Login from './components/Login'
 // 👇 引入 UI 组件 (增加了 Input, InputGroup 等用于 AI 输入框)
-import { 
-  Box, Container, VStack, HStack, Heading, Button, useToast, Flex, Text, 
-  Input, InputGroup, InputRightElement, IconButton, Tabs, TabList, 
-  TabPanels, Tab, TabPanel 
+import {
+  Box, Container, VStack, HStack, Heading, Button, useToast, Flex, Text,
+  Input, InputGroup, InputRightElement, IconButton, Tabs, TabList,
+  TabPanels, Tab, TabPanel, ColorModeProvider, CSSReset
 } from '@chakra-ui/react'
 import { SearchIcon } from '@chakra-ui/icons' // 需要安装 @chakra-ui/icons，如果没有可以用文本代替
 import TaskInput from './components/TaskInput'
 import TaskList from './components/TaskList'
 import Dashboard from './components/Dashboard' // 导入仪表盘组件
 import AvatarUpload from './components/AvatarUpload' // 导入头像上传组件
+import ThemeToggle from './components/ThemeToggle' // 导入主题切换组件
 // 👇 引入 Zustand store
 import useStore from './store'
 
@@ -50,6 +51,7 @@ function App() {
   } = useStore()
   
   const toast = useToast()
+  const { colorMode } = useColorMode()
 
   // 使用 useEffect 触发任务列表和用户信息获取
   useEffect(() => {
@@ -108,14 +110,19 @@ function App() {
   if (!token) return <Login />
 
   return (
-    <Box minH="100vh" bg="gray.50">
-      {/* 顶部导航栏 */}
-      <Box bg="white" px={4} shadow="sm">
-        <Flex h={16} alignItems={'center'} justifyContent={'space-between'} maxW="container.md" mx="auto">
-          <Heading size="md" color="purple.600">✨ Vibe Tasks</Heading>
-          <Button size="sm" colorScheme="gray" onClick={handleLogout}>退出</Button>
-        </Flex>
-      </Box>
+    <ColorModeProvider>
+      <CSSReset />
+      <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
+        {/* 顶部导航栏 */}
+        <Box bg={colorMode === 'dark' ? 'gray.800' : 'white'} px={4} shadow="sm">
+          <Flex h={16} alignItems={'center'} justifyContent={'space-between'} maxW="container.md" mx="auto">
+            <Heading size="md" color="purple.600">✨ Vibe Tasks</Heading>
+            <HStack spacing={3}>
+              <ThemeToggle />
+              <Button size="sm" colorScheme="gray" onClick={handleLogout}>退出</Button>
+            </HStack>
+          </Flex>
+        </Box>
 
       {/* 主内容区 */}
       <Container maxW="container.md" mt={8}>
@@ -298,6 +305,7 @@ function App() {
         </VStack>
       </Container>
     </Box>
+    </ColorModeProvider>
   )
 }
 

@@ -12,7 +12,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -99,6 +98,9 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDead
   const [editingContent, setEditingContent] = useState('')
   const [editingPriority, setEditingPriority] = useState(1)
   const [editingCategory, setEditingCategory] = useState('日常')
+  
+  // 获取当前主题模式
+  const { colorMode } = useColorMode()
   
   // 传感器配置，用于检测拖拽事件
   const sensors = useSensors(
@@ -246,7 +248,7 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDead
             <SortableItem key={task.id} id={task.id}>
               <Box 
                 p={4} 
-                bg="white" 
+                bg={colorMode === 'dark' ? 'gray.800' : 'white'} 
                 borderRadius="lg" 
                 boxShadow="sm"
                 borderLeft="4px solid"
@@ -272,7 +274,8 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDead
                         onChange={(e) => setEditingContent(e.target.value)}
                         variant="filled"
                         size="sm"
-                        bg="gray.50"
+                        bg={colorMode === 'dark' ? 'gray.700' : 'gray.50'}
+                        color={colorMode === 'dark' ? 'white' : 'gray.800'}
                         focusBorderColor="purple.500"
                         autoFocus
                         onKeyDown={(e) => {
@@ -289,7 +292,8 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDead
                         onChange={(e) => setEditingPriority(parseInt(e.target.value))}
                         size="sm"
                         variant="filled"
-                        bg="gray.50"
+                        bg={colorMode === 'dark' ? 'gray.700' : 'gray.50'}
+                        color={colorMode === 'dark' ? 'white' : 'gray.800'}
                         focusBorderColor="purple.500"
                         width="100px"
                       >
@@ -304,7 +308,8 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDead
                         onChange={(e) => setEditingCategory(e.target.value)}
                         size="sm"
                         variant="filled"
-                        bg="gray.50"
+                        bg={colorMode === 'dark' ? 'gray.700' : 'gray.50'}
+                        color={colorMode === 'dark' ? 'white' : 'gray.800'}
                         focusBorderColor="purple.500"
                         width="120px"
                       >
@@ -340,7 +345,7 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDead
                     <Text 
                       flex={1} // 占据剩余空间
                       as={task.is_done ? 's' : 'span'} // 如果完成了，加删除线(s标签)
-                      color={task.is_done ? 'gray.400' : 'gray.800'}
+                      color={task.is_done ? 'gray.400' : (colorMode === 'dark' ? 'white' : 'gray.800')}
                       fontWeight={task.is_done ? 'normal' : 'medium'}
                     >
                       {task.content}

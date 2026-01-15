@@ -11,6 +11,8 @@ const useStore = create((set, get) => ({
   token: localStorage.getItem('vibe_token'),
   username: null,
   avatar_url: null,
+  // === 6. 主题状态 ===
+  isDarkMode: localStorage.getItem('isDarkMode') === 'true',
   
   // === 2. 任务状态 ===
   tasks: [],
@@ -237,6 +239,17 @@ const useStore = create((set, get) => ({
   
   // 设置筛选截止日期
   setFilterDeadline: (deadline) => set({ filterDeadline: deadline }),
+  
+  // === 8. 主题操作方法 ===
+  
+  // 切换主题模式
+  toggleTheme: () => {
+    set((state) => {
+      const newDarkMode = !state.isDarkMode;
+      localStorage.setItem('isDarkMode', newDarkMode);
+      return { isDarkMode: newDarkMode };
+    });
+  },
   
   // === 7. AI 操作方法 ===
   
