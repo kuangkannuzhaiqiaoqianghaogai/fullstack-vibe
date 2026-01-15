@@ -14,7 +14,21 @@ const getBadgeColor = (category) => {
   return 'gray' // 默认颜色
 }
 
-const TaskList = React.memo(({ tasks, filterCategory, toggleTask, deleteTask, editTask }) => {
+// 🎨 定义优先级颜色和标签
+const getPriorityInfo = (priority) => {
+  switch (priority) {
+    case 1:
+      return { color: 'green', label: '低' }
+    case 2:
+      return { color: 'yellow', label: '中' }
+    case 3:
+      return { color: 'red', label: '高' }
+    default:
+      return { color: 'gray', label: '低' }
+  }
+}
+
+const TaskList = React.memo(({ tasks, filterCategory, filterPriority, toggleTask, deleteTask, editTask }) => {
   // 编辑状态：当前正在编辑的任务ID和编辑内容
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editingContent, setEditingContent] = useState('')
@@ -39,15 +53,20 @@ const TaskList = React.memo(({ tasks, filterCategory, toggleTask, deleteTask, ed
       setEditingContent('')
     }
   }
-  // 任务筛选逻辑
-  const filteredTasks = filterCategory === '全部' 
-    ? tasks 
-    : tasks.filter(task => task.category === filterCategory)
+  
+  // 任务筛选逻辑：支持按分类和优先级筛选
+  const filteredTasks = tasks.filter(task => {
+    const matchesCategory = filterCategory === '全部' || task.category === filterCategory
+    const matchesPriority = filterPriority === '全部' || task.priority === parseInt(filterPriority)
+    return matchesCategory && matchesPriority
+  })
   
   if (filteredTasks.length === 0) {
     return (
       <Box textAlign="center" py={10} color="gray.400">
-        <Text fontSize="lg">📭 {tasks.length > 0 ? `没有符合"${filterCategory}"分类的任务` : '还没有任务，添加一个试试？'}</Text>
+        <Text fontSize="lg">
+          📭 {tasks.length > 0 ? `没有符合条件的任务` : '还没有任务，添加一个试试？'}
+        </Text>
       </Box>
     )
   }
@@ -120,7 +139,21 @@ const TaskList = React.memo(({ tasks, filterCategory, toggleTask, deleteTask, ed
               </Text>
             )}
 
-            {/* 3. 分类标签 */}
+            {/* 3. 优先级标签 */}
+            {getPriorityInfo(task.priority) && (
+              <Badge 
+                colorScheme={getPriorityInfo(task.priority).color} 
+                variant="solid" 
+                borderRadius="full" 
+                px={2}
+                fontWeight="bold"
+                fontSize="xs"
+              >
+                {getPriorityInfo(task.priority).label}
+              </Badge>
+            )}
+            
+            {/* 4. 分类标签 */}
             <Badge colorScheme={getBadgeColor(task.category)} variant="subtle" borderRadius="full" px={2}>
               {task.category}
             </Badge>

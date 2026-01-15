@@ -74,6 +74,7 @@ class Task(Base):
     content = Column(String(200))
     is_done = Column(Boolean, default=False)
     category = Column(String(50), default="日常")
+    priority = Column(Integer, default=1)  # 1: 低, 2: 中, 3: 高
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="tasks")
 
@@ -122,10 +123,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 class TaskCreate(BaseModel):
     content: str
     category: str = "日常"
+    priority: int = 1  # 1: 低, 2: 中, 3: 高
 
 class TaskUpdate(BaseModel):
     is_done: bool = None
     content: str = None
+    priority: int = None
     
 class UserCreate(BaseModel):
     username: str
@@ -160,11 +163,25 @@ def read_tasks(current_user: User = Depends(get_current_user), db: Session = Dep
 
 @app.post("/tasks/")
 def create_task(task: TaskCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    category = "日常"
-    if "买" in task.content or "购" in task.content: category = "🛒 购物"
-    elif "学" in task.content or "码" in task.content: category = "💻 学习"
+    # 自动分类逻辑
+    category = task.category
+    if not category:
+        category = "日常"
+        if "买" in task.content or "购" in task.content: category = "🛒 购物"
+        elif "学" in task.content or "码" in task.content: category = "💻 学习"
     
-    db_task = Task(content=task.content, is_done=False, category=category, owner_id=current_user.id)
+    # 确保优先级在有效范围内
+    priority = task.priority
+    if priority < 1: priority = 1
+    if priority > 3: priority = 3
+    
+    db_task = Task(
+        content=task.content, 
+        is_done=False, 
+        category=category, 
+        priority=priority,
+        owner_id=current_user.id
+    )
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -180,6 +197,12 @@ def update_task(task_id: int, task_update: TaskUpdate, current_user: User = Depe
         db_task.is_done = task_update.is_done
     if task_update.content is not None:
         db_task.content = task_update.content
+    if task_update.priority is not None:
+        # 确保优先级在有效范围内
+        priority = task_update.priority
+        if priority < 1: priority = 1
+        if priority > 3: priority = 3
+        db_task.priority = priority
     
     db.commit()
     return db_task

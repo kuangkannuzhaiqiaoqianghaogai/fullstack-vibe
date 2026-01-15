@@ -8,12 +8,14 @@ const TaskInput = React.memo(({
   setNewTask, 
   handleSubmit, 
   newTaskCategory, 
-  setNewTaskCategory 
+  setNewTaskCategory,
+  newTaskPriority,
+  setNewTaskPriority
 }) => {
   return (
     <Box as="form" onSubmit={handleSubmit} w="100%">
-      {/* 分类选择 */}
-      <HStack mb={3}>
+      {/* 分类和优先级选择 */}
+      <HStack mb={3} gap={4}>
         <Select
           value={newTaskCategory}
           onChange={(e) => setNewTaskCategory(e.target.value)}
@@ -23,12 +25,29 @@ const TaskInput = React.memo(({
           boxShadow="sm"
           flex={1}
           maxW="200px"
+          placeholder="选择分类"
         >
           <option value="日常">日常</option>
           <option value="购物">购物</option>
           <option value="学习">学习</option>
           <option value="工作">工作</option>
           <option value="其他">其他</option>
+        </Select>
+        
+        <Select
+          value={newTaskPriority}
+          onChange={(e) => setNewTaskPriority(parseInt(e.target.value))}
+          bg="white"
+          borderRadius="md"
+          focusBorderColor="purple.500"
+          boxShadow="sm"
+          flex={1}
+          maxW="200px"
+          placeholder="选择优先级"
+        >
+          <option value={1}>低优先级</option>
+          <option value={2}>中优先级</option>
+          <option value={3}>高优先级</option>
         </Select>
       </HStack>
       

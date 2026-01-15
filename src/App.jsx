@@ -23,14 +23,18 @@ function App() {
     tasks,
     newTask,
     newTaskCategory,
+    newTaskPriority,
     filterCategory,
+    filterPriority,
     aiPrompt,
     isAiLoading,
     clearToken,
     fetchTasks,
     setNewTask,
     setNewTaskCategory,
+    setNewTaskPriority,
     setFilterCategory,
+    setFilterPriority,
     setAiPrompt,
     analyzeTask,
     toggleTask,
@@ -176,6 +180,8 @@ function App() {
             setNewTask={setNewTask} 
             newTaskCategory={newTaskCategory}
             setNewTaskCategory={setNewTaskCategory}
+            newTaskPriority={newTaskPriority}
+            setNewTaskPriority={setNewTaskPriority}
             handleSubmit={handleSubmit} 
           />
 
@@ -189,9 +195,10 @@ function App() {
               {/* 任务列表 */}
               <TabPanel padding={0}>
                 {/* 筛选器 */}
-                <Box mb={4}>
+                <Box mb={6}>
+                  {/* 分类筛选 */}
                   <Text fontSize="sm" fontWeight="bold" color="gray.600" mb={2}>分类筛选</Text>
-                  <HStack spacing={2} overflowX="auto" pb={2}>
+                  <HStack spacing={2} overflowX="auto" pb={2} mb={4}>
                     {[
                       { value: '全部', label: '全部' },
                       { value: '日常', label: '日常' },
@@ -213,12 +220,36 @@ function App() {
                       </Button>
                     ))}
                   </HStack>
+                  
+                  {/* 优先级筛选 */}
+                  <Text fontSize="sm" fontWeight="bold" color="gray.600" mb={2}>优先级筛选</Text>
+                  <HStack spacing={2} overflowX="auto" pb={2}>
+                    {[
+                      { value: '全部', label: '全部' },
+                      { value: 1, label: '低优先级' },
+                      { value: 2, label: '中优先级' },
+                      { value: 3, label: '高优先级' }
+                    ].map((item) => (
+                      <Button
+                        key={item.value}
+                        size="sm"
+                        variant={filterPriority === item.value ? "solid" : "ghost"}
+                        colorScheme={filterPriority === item.value ? "purple" : "gray"}
+                        onClick={() => setFilterPriority(item.value)}
+                        borderRadius="full"
+                        flexShrink={0}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </HStack>
                 </Box>
                 
                 {/* 任务列表 */}
                 <TaskList 
                   tasks={tasks} 
                   filterCategory={filterCategory}
+                  filterPriority={filterPriority}
                   toggleTask={toggleTask} 
                   deleteTask={deleteTask} 
                   editTask={editTask}
