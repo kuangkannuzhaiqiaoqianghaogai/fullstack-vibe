@@ -20,6 +20,7 @@ const useStore = create((set, get) => ({
   newTask: '',
   newTaskCategory: '日常',
   newTaskPriority: 1, // 1: 低, 2: 中, 3: 高
+  newTaskDeadline: null,
   
   // === 4. AI 相关状态 ===
   aiPrompt: '',
@@ -28,6 +29,7 @@ const useStore = create((set, get) => ({
   // === 5. 筛选状态 ===
   filterCategory: '全部',
   filterPriority: '全部',
+  filterDeadline: '全部', // 全部, 今天, 明天, 本周, 本月
   
   // === 5. 用户操作方法 ===
   
@@ -120,7 +122,7 @@ const useStore = create((set, get) => ({
   
   // 创建新任务
   createTask: async () => {
-    const { newTask, newTaskCategory, newTaskPriority, fetchTasks } = get()
+    const { newTask, newTaskCategory, newTaskPriority, newTaskDeadline, fetchTasks } = get()
     if (!newTask.trim()) return
     
     set({ isLoading: true })
@@ -128,13 +130,15 @@ const useStore = create((set, get) => ({
       await tasks.createTask({ 
         content: newTask, 
         category: newTaskCategory,
-        priority: newTaskPriority
+        priority: newTaskPriority,
+        deadline: newTaskDeadline
       })
       await fetchTasks()
       set({ 
         newTask: '', 
         newTaskCategory: '日常',
-        newTaskPriority: 1
+        newTaskPriority: 1,
+        newTaskDeadline: null
       })
     } catch (err) {
       console.error('创建任务失败:', err)
@@ -204,11 +208,17 @@ const useStore = create((set, get) => ({
   // 设置新任务优先级
   setNewTaskPriority: (priority) => set({ newTaskPriority: priority }),
   
+  // 设置新任务截止日期
+  setNewTaskDeadline: (deadline) => set({ newTaskDeadline: deadline }),
+  
   // 设置筛选分类
   setFilterCategory: (category) => set({ filterCategory: category }),
   
   // 设置筛选优先级
   setFilterPriority: (priority) => set({ filterPriority: priority }),
+  
+  // 设置筛选截止日期
+  setFilterDeadline: (deadline) => set({ filterDeadline: deadline }),
   
   // === 7. AI 操作方法 ===
   

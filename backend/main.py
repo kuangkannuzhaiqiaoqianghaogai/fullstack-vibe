@@ -1,7 +1,7 @@
 # backend/main.py (终极修正版)
 import os
 from datetime import datetime, timedelta
-from typing import Union, List
+from typing import Union, List, Optional
 
 # 1. 引入 dotenv，确保能读取 .env 文件
 from dotenv import load_dotenv
@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from pydantic import BaseModel
@@ -75,6 +75,7 @@ class Task(Base):
     is_done = Column(Boolean, default=False)
     category = Column(String(50), default="日常")
     priority = Column(Integer, default=1)  # 1: 低, 2: 中, 3: 高
+    deadline = Column(DateTime, nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="tasks")
 
@@ -124,11 +125,13 @@ class TaskCreate(BaseModel):
     content: str
     category: str = "日常"
     priority: int = 1  # 1: 低, 2: 中, 3: 高
+    deadline: Optional[datetime] = None
 
 class TaskUpdate(BaseModel):
     is_done: bool = None
     content: str = None
     priority: int = None
+    deadline: Optional[datetime] = None
     
 class UserCreate(BaseModel):
     username: str
@@ -180,6 +183,7 @@ def create_task(task: TaskCreate, current_user: User = Depends(get_current_user)
         is_done=False, 
         category=category, 
         priority=priority,
+        deadline=task.deadline,
         owner_id=current_user.id
     )
     db.add(db_task)
@@ -203,6 +207,8 @@ def update_task(task_id: int, task_update: TaskUpdate, current_user: User = Depe
         if priority < 1: priority = 1
         if priority > 3: priority = 3
         db_task.priority = priority
+    if task_update.deadline is not None:
+        db_task.deadline = task_update.deadline
     
     db.commit()
     return db_task

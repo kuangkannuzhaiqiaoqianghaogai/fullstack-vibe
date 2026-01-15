@@ -28,7 +28,29 @@ const getPriorityInfo = (priority) => {
   }
 }
 
-const TaskList = React.memo(({ tasks, filterCategory, filterPriority, toggleTask, deleteTask, editTask }) => {
+// 格式化截止日期
+const formatDeadline = (deadline) => {
+  if (!deadline) return ''
+  
+  const date = new Date(deadline)
+  const now = new Date()
+  const diffDays = Math.ceil((date - now) / (1000 * 60 * 60 * 24))
+  
+  let status = ''
+  if (diffDays < 0) {
+    status = '⚠️ 已过期'
+  } else if (diffDays === 0) {
+    status = '⏰ 今天'
+  } else if (diffDays === 1) {
+    status = '⏰ 明天'
+  } else if (diffDays < 7) {
+    status = `⏰ ${diffDays}天后`
+  }
+  
+  return `${date.toLocaleDateString()} ${date.toLocaleTimeString()} ${status}`
+}
+
+const TaskList = React.memo(({ tasks, filterCategory, filterPriority, filterDeadline, toggleTask, deleteTask, editTask }) => {
   // 编辑状态：当前正在编辑的任务ID和编辑内容
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editingContent, setEditingContent] = useState('')
@@ -54,11 +76,46 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, toggleTask
     }
   }
   
-  // 任务筛选逻辑：支持按分类和优先级筛选
+  // 任务筛选逻辑：支持按分类、优先级和截止日期筛选
   const filteredTasks = tasks.filter(task => {
+    // 分类筛选
     const matchesCategory = filterCategory === '全部' || task.category === filterCategory
+    // 优先级筛选
     const matchesPriority = filterPriority === '全部' || task.priority === parseInt(filterPriority)
-    return matchesCategory && matchesPriority
+    // 截止日期筛选
+    let matchesDeadline = true
+    if (filterDeadline !== '全部' && task.deadline) {
+      const deadline = new Date(task.deadline)
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const nextWeek = new Date(today)
+      nextWeek.setDate(nextWeek.getDate() + 7)
+      const nextMonth = new Date(today)
+      nextMonth.setMonth(nextMonth.getMonth() + 1)
+      
+      switch (filterDeadline) {
+        case '今天':
+          matchesDeadline = deadline >= today && deadline < tomorrow
+          break
+        case '明天':
+          matchesDeadline = deadline >= tomorrow && deadline < new Date(tomorrow.getTime() + 24 * 60 * 60 * 1000)
+          break
+        case '本周':
+          matchesDeadline = deadline >= today && deadline < nextWeek
+          break
+        case '本月':
+          matchesDeadline = deadline >= today && deadline < nextMonth
+          break
+        default:
+          matchesDeadline = true
+      }
+    } else if (filterDeadline !== '全部' && !task.deadline) {
+      matchesDeadline = false
+    }
+    
+    return matchesCategory && matchesPriority && matchesDeadline
   })
   
   if (filteredTasks.length === 0) {
@@ -157,8 +214,21 @@ const TaskList = React.memo(({ tasks, filterCategory, filterPriority, toggleTask
             <Badge colorScheme={getBadgeColor(task.category)} variant="subtle" borderRadius="full" px={2}>
               {task.category}
             </Badge>
+            
+            {/* 5. 截止日期标签 */}
+            {task.deadline && (
+              <Badge 
+                colorScheme={new Date(task.deadline) < new Date() ? "red" : "blue"} 
+                variant="subtle" 
+                borderRadius="full" 
+                px={2}
+                fontSize="xs"
+              >
+                {formatDeadline(task.deadline)}
+              </Badge>
+            )}
 
-            {/* 4. 操作按钮 */}
+            {/* 6. 操作按钮 */}
             <HStack spacing={1}>
               {/* 编辑按钮 */}
               <IconButton 

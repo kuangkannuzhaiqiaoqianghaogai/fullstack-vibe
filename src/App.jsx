@@ -24,8 +24,10 @@ function App() {
     newTask,
     newTaskCategory,
     newTaskPriority,
+    newTaskDeadline,
     filterCategory,
     filterPriority,
+    filterDeadline,
     aiPrompt,
     isAiLoading,
     clearToken,
@@ -33,8 +35,10 @@ function App() {
     setNewTask,
     setNewTaskCategory,
     setNewTaskPriority,
+    setNewTaskDeadline,
     setFilterCategory,
     setFilterPriority,
+    setFilterDeadline,
     setAiPrompt,
     analyzeTask,
     toggleTask,
@@ -182,6 +186,8 @@ function App() {
             setNewTaskCategory={setNewTaskCategory}
             newTaskPriority={newTaskPriority}
             setNewTaskPriority={setNewTaskPriority}
+            newTaskDeadline={newTaskDeadline}
+            setNewTaskDeadline={setNewTaskDeadline}
             handleSubmit={handleSubmit} 
           />
 
@@ -223,7 +229,7 @@ function App() {
                   
                   {/* 优先级筛选 */}
                   <Text fontSize="sm" fontWeight="bold" color="gray.600" mb={2}>优先级筛选</Text>
-                  <HStack spacing={2} overflowX="auto" pb={2}>
+                  <HStack spacing={2} overflowX="auto" pb={2} mb={4}>
                     {[
                       { value: '全部', label: '全部' },
                       { value: 1, label: '低优先级' },
@@ -236,6 +242,30 @@ function App() {
                         variant={filterPriority === item.value ? "solid" : "ghost"}
                         colorScheme={filterPriority === item.value ? "purple" : "gray"}
                         onClick={() => setFilterPriority(item.value)}
+                        borderRadius="full"
+                        flexShrink={0}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </HStack>
+                  
+                  {/* 截止日期筛选 */}
+                  <Text fontSize="sm" fontWeight="bold" color="gray.600" mb={2}>截止日期筛选</Text>
+                  <HStack spacing={2} overflowX="auto" pb={2}>
+                    {[
+                      { value: '全部', label: '全部' },
+                      { value: '今天', label: '今天' },
+                      { value: '明天', label: '明天' },
+                      { value: '本周', label: '本周' },
+                      { value: '本月', label: '本月' }
+                    ].map((item) => (
+                      <Button
+                        key={item.value}
+                        size="sm"
+                        variant={filterDeadline === item.value ? "solid" : "ghost"}
+                        colorScheme={filterDeadline === item.value ? "purple" : "gray"}
+                        onClick={() => setFilterDeadline(item.value)}
                         borderRadius="full"
                         flexShrink={0}
                       >
